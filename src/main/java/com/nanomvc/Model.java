@@ -15,13 +15,14 @@ import org.slf4j.LoggerFactory;
 public class Model {
 
     private static Logger _log = LoggerFactory.getLogger(Model.class);
-    private static Boolean cachable = Boolean.valueOf(true);
+    private static Boolean cachable = true;
     private Session session;
     private Order order = Order.asc("id");
     public static final int ASC = 0;
     public static final int DESC = 1;
-    Map<String, Object> criteriaEQ;
-    Map<String, Object> criteriaNE;
+    private Map<String, Object> criteriaEQ;
+    private Map<String, Object> criteriaNE;
+    private Map<String, String> alias;
     private Integer limit;
     private Integer offset;
     private Class modelClass;
@@ -52,6 +53,13 @@ public class Model {
         this.offset = offset;
         return this;
     }
+    
+    public Model addAlias(String name, String alias) {
+        if(this.alias == null)
+            this.alias = new HashMap<>();
+        this.alias.put(name, alias);
+        return this;
+    }
 
     public Model addCriteria(String key, Object value) {
         return addCriteria(key, value, Boolean.valueOf(true));
@@ -59,24 +67,24 @@ public class Model {
 
     public Model addCriteria(String key, Object value, Boolean eq) {
         if (eq.booleanValue()) {
-            if (this.criteriaEQ == null) {
-                this.criteriaEQ = new HashMap();
+            if (criteriaEQ == null) {
+                criteriaEQ = new HashMap();
             }
-            this.criteriaEQ.put(key, value);
+            criteriaEQ.put(key, value);
         } else {
-            if (this.criteriaNE == null) {
-                this.criteriaNE = new HashMap();
+            if (criteriaNE == null) {
+                criteriaNE = new HashMap();
             }
-            this.criteriaNE.put(key, value);
+            criteriaNE.put(key, value);
         }
         return this;
     }
 
     public Model addCriteria(Map params) {
-        if (this.criteriaEQ == null) {
-            this.criteriaEQ = new HashMap();
+        if (criteriaEQ == null) {
+            criteriaEQ = new HashMap();
         }
-        this.criteriaEQ.putAll(params);
+        criteriaEQ.putAll(params);
         return this;
     }
 
@@ -86,13 +94,13 @@ public class Model {
 
     public List findAll() {
         List result = createCriteria().list();
-        this.session.close();
+        session.close();
         return result;
     }
 
     public Object findOne() {
         Object result = createCriteria().uniqueResult();
-        this.session.close();
+        session.close();
         return result;
     }
 
@@ -106,8 +114,8 @@ public class Model {
 
     public Object findByPk(Object id) {
         Object result = createCriteria().add(Restrictions.idEq(id)).uniqueResult();
-
-        this.session.close();
+        
+        session.close();
         return result;
     }
 
@@ -116,25 +124,25 @@ public class Model {
     }
 
     public List findByCriteria(Map<String, String> params) {
-        this.criteriaEQ.putAll(params);
+        criteriaEQ.putAll(params);
         return findAll();
     }
 
     public void remove(Object object) {
-        this.session = HibernateUtil.getSession();
-        this.session.beginTransaction();
+        session = HibernateUtil.getSession();
+        session.beginTransaction();
         try {
-            this.session.delete(object);
-            this.session.getTransaction().commit();
+            session.delete(object);
+            session.getTransaction().commit();
         } catch (Exception e) {
             if (e.getCause() != null) {
                 _log.error(e.getCause().toString());
             } else {
                 _log.error(e.toString());
             }
-            this.session.getTransaction().rollback();
+            session.getTransaction().rollback();
         } finally {
-            this.session.close();
+            session.close();
         }
     }
 
@@ -148,49 +156,54 @@ public class Model {
 
     public Long countAll() {
         Long count = (Long) createCriteria().setProjection(Projections.rowCount()).uniqueResult();
-        this.session.close();
+        session.close();
         return count;
     }
 
     public void save(Object object) {
-        this.session = HibernateUtil.getSession();
-        this.session.beginTransaction();
+        session = HibernateUtil.getSession();
+        session.beginTransaction();
         try {
-            this.session.saveOrUpdate(object);
-            this.session.getTransaction().commit();
+            session.saveOrUpdate(object);
+            session.getTransaction().commit();
         } catch (Exception e) {
             if (e.getCause() != null) {
                 _log.error(e.getCause().toString());
             } else {
                 _log.error(e.toString());
             }
-            this.session.getTransaction().rollback();
+            session.getTransaction().rollback();
         } finally {
-            this.session.close();
+            session.close();
         }
     }
 
     private Criteria createCriteria() {
-        this.session = HibernateUtil.getSession();
+        session = HibernateUtil.getSession();
 
-        Criteria criteria = this.session.createCriteria(this.modelClass).setCacheable(cachable.booleanValue());
-        if (this.limit != null) {
-            criteria.setMaxResults(this.limit.intValue());
+        Criteria criteria = session.createCriteria(modelClass).setCacheable(cachable);
+        if (limit != null) {
+            criteria.setMaxResults(limit);
         }
-        if (this.offset != null) {
-            criteria.setFirstResult(this.offset.intValue());
+        if (offset != null) {
+            criteria.setFirstResult(offset);
         }
-        if (this.order != null) {
-            criteria.addOrder(this.order);
+        if (order != null) {
+            criteria.addOrder(order);
         }
-        if (this.criteriaEQ != null) {
-            for (String key : this.criteriaEQ.keySet()) {
-                criteria.add(Restrictions.eq(key, this.criteriaEQ.get(key)));
+        if (criteriaEQ != null) {
+            for (String key : criteriaEQ.keySet()) {
+                criteria.add(Restrictions.eq(key, criteriaEQ.get(key)));
             }
         }
-        if (this.criteriaNE != null) {
-            for (String key : this.criteriaNE.keySet()) {
-                criteria.add(Restrictions.ne(key, this.criteriaNE.get(key)));
+        if (criteriaNE != null) {
+            for (String key : criteriaNE.keySet()) {
+                criteria.add(Restrictions.ne(key, criteriaNE.get(key)));
+            }
+        }
+        if(alias != null) {
+            for (String name : alias.keySet()) {
+                criteria.createAlias(name, alias.get(name));
             }
         }
         clear();
@@ -198,10 +211,10 @@ public class Model {
     }
 
     private void clear() {
-        this.criteriaEQ = null;
-        this.criteriaNE = null;
-        this.limit = null;
-        this.offset = null;
-        this.order = null;
+        criteriaEQ = null;
+        criteriaNE = null;
+        limit = null;
+        offset = null;
+        order = null;
     }
 }

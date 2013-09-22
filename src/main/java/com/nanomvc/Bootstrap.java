@@ -59,7 +59,8 @@ public class Bootstrap extends HttpServlet
         this.routerClass = config.getInitParameter("routerClass");
         super.init(config);
         try {
-            HibernateUtil.setConfigurationFile(new File(getServletContext().getRealPath("/WEB-INF/conf/hibernate.cfg.xml")));
+            File file = new File(getServletContext().getRealPath("/WEB-INF/conf/hibernate.cfg.xml"));
+            HibernateUtil.setConfigurationFile(file);
         } catch (Exception ex) {
         }
     }
