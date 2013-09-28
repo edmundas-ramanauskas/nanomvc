@@ -118,6 +118,36 @@ public class Model {
         session.close();
         return result;
     }
+    
+    public List findBetween(String field, Object start, Object end) {
+        List result = createCriteria()
+                    .add(Restrictions.between(field, start, end)).list();
+        session.close();
+        return result;
+    }
+    
+    public List findIn(String field, List in) {
+        List result = createCriteria()
+                    .add(Restrictions.in(field, in)).list();
+        session.close();
+        return result;
+    }
+    
+    public Long countBetween(String field, Object start, Object end) {
+        Long count = (Long) createCriteria()
+                    .add(Restrictions.between(field, start, end))
+                    .setProjection(Projections.rowCount()).uniqueResult();
+        session.close();
+        return count;
+    }
+    
+    public Long countIn(String field, List in) {
+        Long count = (Long) createCriteria()
+                    .add(Restrictions.in(field, in))
+                    .setProjection(Projections.rowCount()).uniqueResult();
+        session.close();
+        return count;
+    }
 
     public List find(Map<String, String> params) {
         return findByCriteria(params);
