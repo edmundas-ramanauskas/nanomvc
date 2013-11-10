@@ -1,4 +1,4 @@
-package com.nanomvc;
+package org.nanomvc;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;

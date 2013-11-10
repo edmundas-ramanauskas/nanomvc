@@ -1,4 +1,4 @@
-import com.nanomvc.Router;
+import org.nanomvc.mvc.Router;
 import java.util.HashMap;
 import java.util.Map;
 

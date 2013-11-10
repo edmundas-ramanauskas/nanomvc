@@ -1,6 +1,8 @@
-package com.nanomvc;
+package org.nanomvc.mvc;
 
-import com.nanomvc.util.RequestUtil;
+import org.nanomvc.Application;
+import org.nanomvc.http.LocalFile;
+import org.nanomvc.utils.RequestUtil;
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.io.BufferedWriter;
@@ -58,7 +60,7 @@ public abstract class Controller {
     private String controller;
     private String action;
     private String viewsPath;
-    private static VelocityEngine veloEngine = null;
+    private static VelocityEngine veloEngine;
     private Boolean redirect = Boolean.valueOf(false);
     private StringBuffer output;
     private Map<String, Object> params;
@@ -430,18 +432,14 @@ public abstract class Controller {
         if (veloEngine == null) {
             try {
                 Properties properties = new Properties();
-                try {
-                    properties.setProperty("input.encoding", "UTF-8");
-                    properties.setProperty("resource.loader", "webapp");
-                    properties.setProperty("webapp.resource.loader.class", "org.apache.velocity.tools.view.WebappResourceLoader");
-                    properties.setProperty("webapp.resource.loader.path", this.viewsPath);
-                    properties.setProperty("resource.manager.defaultcache.size", "256");
-                    properties.setProperty("webapp.resource.loader.cache", "false");
-                    properties.setProperty("runtime.log.logsystem.class", "org.apache.velocity.runtime.log.Log4JLogChute");
-                    properties.setProperty("runtime.log.logsystem.log4j.logger", VelocityEngine.class.getName());
-                } catch (Exception ex) {
-                    _log.error(ex.toString());
-                }
+                properties.setProperty("input.encoding", "UTF-8");
+                properties.setProperty("resource.loader", "webapp");
+                properties.setProperty("webapp.resource.loader.class", "org.apache.velocity.tools.view.WebappResourceLoader");
+                properties.setProperty("webapp.resource.loader.path", this.viewsPath);
+                properties.setProperty("resource.manager.defaultcache.size", "256");
+                properties.setProperty("webapp.resource.loader.cache", "false");
+                properties.setProperty("runtime.log.logsystem.class", "org.apache.velocity.runtime.log.Log4JLogChute");
+                properties.setProperty("runtime.log.logsystem.log4j.logger", VelocityEngine.class.getName());
                 veloEngine = new VelocityEngine();
                 veloEngine.setApplicationAttribute("javax.servlet.ServletContext", this.context);
                 veloEngine.init(properties);

@@ -1,6 +1,10 @@
-package com.nanomvc;
+package org.nanomvc;
 
-import com.nanomvc.exceptions.ControllerException;
+import org.nanomvc.utils.HibernateUtil;
+import org.nanomvc.mvc.Router;
+import org.nanomvc.http.Request;
+import org.nanomvc.http.RequestHandler;
+import org.nanomvc.exceptions.ControllerException;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -26,6 +30,7 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.nanomvc.mvc.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +67,7 @@ public class Bootstrap extends HttpServlet
             File file = new File(getServletContext().getRealPath("/WEB-INF/conf/hibernate.cfg.xml"));
             HibernateUtil.setConfigurationFile(file);
         } catch (Exception ex) {
+            _log.info("/WEB-INF/conf/hibernate.cfg.xml is missing");
         }
     }
 
@@ -209,10 +215,11 @@ public class Bootstrap extends HttpServlet
 
                 method = cc.getDeclaredMethod(controllerMethodName, params);
 
-                method.invoke(co, arguments);
-                method = cc.getMethod("flush", new Class[0]);
-                method.setAccessible(true);
-                method.invoke(co, new Object[0]);
+                Result result = (Result) method.invoke(co, arguments);
+                output(result.render());
+//                method = cc.getMethod("flush", new Class[0]);
+//                method.setAccessible(true);
+//                method.invoke(co, new Object[0]);
 
                 co = null;
                 cc = null;
@@ -294,13 +301,22 @@ public class Bootstrap extends HttpServlet
     }
 
     private void error(String error, HttpServletRequest request, HttpServletResponse response) {
-        request.setAttribute("error", error);
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/error.jsp");
-        try {
-            dispatcher.include(request, response);
-        } catch (ServletException | IOException e) {
-            _log.error(e.getMessage());
-        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("<!DOCTYPE html>\n");
+        sb.append("<html>\n");
+        sb.append("<head>\n");
+        sb.append("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n");
+        sb.append("<title>Error</title>\n");
+        sb.append("<link rel=\"stylesheet\" type=\"text/css\" media=\"all\""
+                + " href=\"//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css\" />\n");
+        sb.append("</head>\n");
+        sb.append("<body style=\"padding-top: 10px;\">\n");
+        sb.append("<div class=\"container\"><div class=\"alert alert-danger\">\n");
+        sb.append(error + "\n");
+        sb.append("</div></div>\n");
+        sb.append("</body>\n");
+        sb.append("</html>\n");
+        output(sb.toString());
     }
 
     private void flush(HttpServletResponse response) throws IOException {

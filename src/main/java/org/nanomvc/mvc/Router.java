@@ -1,4 +1,4 @@
-package com.nanomvc;
+package org.nanomvc.mvc;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,4 +1,6 @@
-package com.nanomvc;
+package org.nanomvc.mvc;
+
+import org.nanomvc.mvc.Controller;
 
 public class DefaultCotroller extends Controller
 {

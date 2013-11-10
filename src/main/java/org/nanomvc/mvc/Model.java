@@ -1,4 +1,4 @@
-package com.nanomvc;
+package org.nanomvc.mvc;
 
 import java.util.HashMap;
 import java.util.List;
@@ -9,6 +9,7 @@ import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.nanomvc.utils.HibernateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

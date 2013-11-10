@@ -1,4 +1,4 @@
-package com.nanomvc;
+package org.nanomvc.libs;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

@@ -1,4 +1,4 @@
-package com.nanomvc;
+package org.nanomvc.http;
 
 public class LocalFile
 {

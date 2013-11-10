@@ -1,4 +1,4 @@
-package com.nanomvc;
+package org.nanomvc;
 
 import java.io.PrintStream;
 

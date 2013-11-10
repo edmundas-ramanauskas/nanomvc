@@ -1,4 +1,4 @@
-package com.nanomvc.exceptions;
+package org.nanomvc.exceptions;
 
 public class ControllerException extends RuntimeException {
 

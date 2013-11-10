@@ -1,4 +1,4 @@
-package com.nanomvc;
+package org.nanomvc.libs;
 
 public class MongoFactory
 {

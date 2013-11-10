@@ -1,4 +1,4 @@
-package com.nanomvc.util;
+package org.nanomvc.utils;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -169,7 +169,6 @@ public final class RequestUtil {
     }
 
     public static enum FORMAT {
-
         JPG, PNG, GIF, BMP;
     }
 }

@@ -1,4 +1,4 @@
-package com.nanomvc;
+package org.nanomvc.utils;
 
 import java.io.File;
 import org.hibernate.HibernateException;

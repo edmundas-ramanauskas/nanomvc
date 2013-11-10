@@ -1,4 +1,4 @@
-package com.nanomvc;
+package org.nanomvc.http;
 
 import java.io.Serializable;
 import java.util.List;

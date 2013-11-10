@@ -1,4 +1,4 @@
-package com.nanomvc;
+package org.nanomvc.mvc;
 
 public class ModelFactory {
 

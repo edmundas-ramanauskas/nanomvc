@@ -1,4 +1,4 @@
-package com.nanomvc.util;
+package org.nanomvc.utils;
 
 import java.io.Serializable;
 

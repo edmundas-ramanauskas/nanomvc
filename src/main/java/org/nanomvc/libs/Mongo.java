@@ -1,4 +1,4 @@
-package com.nanomvc;
+package org.nanomvc.libs;
 
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Key;
