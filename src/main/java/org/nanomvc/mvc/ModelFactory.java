@@ -10,7 +10,7 @@ public class ModelFactory {
         Model model = null;
         try {
             ClassLoader classLoader = Model.class.getClassLoader();
-            Class clas = classLoader.loadClass("com.shop.mvc.models." + modelClass);
+            Class clas = classLoader.loadClass("com.vudva.warehouse.mvc.models." + modelClass);
             model = new Model(clas);
         } catch (ClassNotFoundException | IllegalArgumentException | SecurityException ex) {
         }

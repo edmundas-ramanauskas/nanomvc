@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -28,6 +29,7 @@ import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.log4j.BasicConfigurator;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.nanomvc.mvc.Result;
@@ -67,7 +69,7 @@ public class Bootstrap extends HttpServlet
             File file = new File(getServletContext().getRealPath("/WEB-INF/conf/hibernate.cfg.xml"));
             HibernateUtil.setConfigurationFile(file);
         } catch (Exception ex) {
-            _log.info("/WEB-INF/conf/hibernate.cfg.xml is missing");
+            _log.warn("/WEB-INF/conf/hibernate.cfg.xml is missing");
         }
     }
 
@@ -119,6 +121,8 @@ public class Bootstrap extends HttpServlet
     }
 
     protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        BasicConfigurator.configure();
+        
         startTime = System.currentTimeMillis();
         output = null;
         String path = request.getServletPath();
@@ -216,7 +220,7 @@ public class Bootstrap extends HttpServlet
                 method = cc.getDeclaredMethod(controllerMethodName, params);
 
                 Result result = (Result) method.invoke(co, arguments);
-                output(result.render());
+                buildResponse(request, response, result);
 //                method = cc.getMethod("flush", new Class[0]);
 //                method.setAccessible(true);
 //                method.invoke(co, new Object[0]);
@@ -261,6 +265,20 @@ public class Bootstrap extends HttpServlet
         }
         flush(response);
 //        log(request);
+    }
+    
+    private void buildResponse(HttpServletRequest request, HttpServletResponse response, Result result) {
+        response.setStatus(result.getStatusCode());
+        for(Entry<String, String> entry : result.getHeaders().entrySet()) {
+            response.setHeader(entry.getKey(), entry.getValue());
+        }
+        if(result.isRenderable()) {
+            Renderer renderer = new VelocityRenderer();
+            renderer.configure(getServletContext(), viewsPath, result.getParams());
+            output(renderer.render(result.getTemplate()));
+        } else {
+            output(result.getContent());
+        }
     }
 
     private void log(HttpServletRequest request) {
@@ -342,7 +360,7 @@ public class Bootstrap extends HttpServlet
         if (this.output == null) {
             this.output = new StringBuffer();
         }
-        this.output.append(value);
+        output.append(value);
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

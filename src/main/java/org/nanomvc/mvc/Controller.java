@@ -4,7 +4,6 @@ import org.nanomvc.Application;
 import org.nanomvc.http.LocalFile;
 import org.nanomvc.utils.RequestUtil;
 import java.awt.image.BufferedImage;
-import java.awt.image.BufferedImageOp;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -40,16 +38,15 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
-import org.apache.velocity.exception.VelocityException;
 import org.imgscalr.Scalr;
-import org.imgscalr.Scalr.Mode;
 import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class Controller {
-
+public abstract class Controller
+{
     private static Logger _log = LoggerFactory.getLogger(Controller.class);
+    
     protected HttpServletRequest request;
     protected HttpServletResponse response;
     protected HttpSession session;
@@ -60,6 +57,7 @@ public abstract class Controller {
     private String controller;
     private String action;
     private String viewsPath;
+    private String template;
     private static VelocityEngine veloEngine;
     private Boolean redirect = Boolean.valueOf(false);
     private StringBuffer output;
@@ -85,36 +83,19 @@ public abstract class Controller {
         this.viewsPath = (viewsPath.endsWith("/") ? viewsPath : new StringBuilder().append(viewsPath).append("/").toString());
         this.controller = controller;
         this.action = action;
+        this.template = action;
 
         this.app = new Application(getBaseUrl(), getCurrentUrl(), router, request.getSession());
+        
+        this.params = new HashMap();
+        this.global = new HashMap();
     }
 
     public void init() {
     }
 
     protected String getPath() {
-        return this.context.getRealPath("/");
-    }
-
-    public final void flush() {
-        this.response.setContentType(this.contentType);
-        this.files = null;
-        this.fields = null;
-        if (this.output == null) {
-            return;
-        }
-        try {
-            this.response.getWriter().print(this.output.toString());
-            this.response.getWriter().flush();
-        } catch (IOException ex) {
-        }
-    }
-
-    protected final void output(String value) {
-        if (this.output == null) {
-            this.output = new StringBuffer();
-        }
-        this.output.append(value);
+        return context.getRealPath("/");
     }
 
     protected void call(String action) {
@@ -276,7 +257,9 @@ public abstract class Controller {
         } else if ((path != null) && (!path.equals("")) && (!path.startsWith("/"))) {
             path = new StringBuilder().append("/").append(path).toString();
         }
-        return new StringBuilder().append("/public/upl/").append(this.controller).append("/images").append(path).append("/").append(filename).toString();
+        return new StringBuilder().append("/public/upl/").append(controller)
+                .append("/images").append(path).append("/").append(filename)
+                .toString();
     }
 
     protected final LocalFile handleFileUpload(String fieldName) {
@@ -307,6 +290,7 @@ public abstract class Controller {
                 return new LocalFile(path, pathName, file);
             }
         } catch (Exception ex) {
+            
         }
         return null;
     }
@@ -362,130 +346,6 @@ public abstract class Controller {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", lt);
         return formatter.format(new Date());
     }
-
-    protected final void render() {
-        render(this.action);
-    }
-
-    protected final void render(String view) {
-        if ((this.redirect.booleanValue()) || (this.output != null)) {
-            return;
-        }
-        this.output = null;
-
-        VelocityEngine engine = getVeloEngine();
-        VelocityContext context = new VelocityContext();
-
-        view = new StringBuilder().append(this.controller).append("/").append(view).append(!view.endsWith(".htm") ? ".htm" : "").toString();
-
-        Template tpl = null;
-        try {
-            tpl = engine.getTemplate("layout/main.htm");
-        } catch (ResourceNotFoundException | ParseErrorException  ex) {
-            _log.error(ex.toString());
-        } catch(Exception ex) {
-            
-        }
-        try {
-            PrintWriter out = this.response.getWriter();
-            Throwable localThrowable2 = null;
-            try {
-                BufferedWriter bw = new BufferedWriter(out);
-
-                context = new VelocityContext();
-                context.put("APP", this.app);
-                context.put("esc", new org.apache.velocity.tools.generic.EscapeTool());
-                if (this.global != null) {
-                    for (Map.Entry entry : this.global.entrySet()) {
-                        context.put((String) entry.getKey(), entry.getValue());
-                    }
-                }
-                context.put("content", fetch(view, this.params));
-
-                if (tpl != null) {
-                    tpl.merge(context, bw);
-                }
-                bw.flush();
-                bw.close();
-            } catch (Throwable localThrowable1) {
-                localThrowable2 = localThrowable1;
-                throw localThrowable1;
-            } finally {
-                if (out != null) {
-                    if (localThrowable2 != null) {
-                        try {
-                            out.close();
-                        } catch (Throwable x2) {
-                            localThrowable2.addSuppressed(x2);
-                        }
-                    } else {
-                        out.close();
-                    }
-                }
-            }
-        } catch (IOException ex) {
-            _log.error(ex.toString());
-        }
-    }
-
-    private final VelocityEngine getVeloEngine() {
-        if (veloEngine == null) {
-            try {
-                Properties properties = new Properties();
-                properties.setProperty("input.encoding", "UTF-8");
-                properties.setProperty("resource.loader", "webapp");
-                properties.setProperty("webapp.resource.loader.class", "org.apache.velocity.tools.view.WebappResourceLoader");
-                properties.setProperty("webapp.resource.loader.path", this.viewsPath);
-                properties.setProperty("resource.manager.defaultcache.size", "256");
-                properties.setProperty("webapp.resource.loader.cache", "false");
-                properties.setProperty("runtime.log.logsystem.class", "org.apache.velocity.runtime.log.Log4JLogChute");
-                properties.setProperty("runtime.log.logsystem.log4j.logger", VelocityEngine.class.getName());
-                veloEngine = new VelocityEngine();
-                veloEngine.setApplicationAttribute("javax.servlet.ServletContext", this.context);
-                veloEngine.init(properties);
-            } catch (Exception ex) {
-                java.util.logging.Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-        return veloEngine;
-    }
-
-    protected final String fetch(String view) {
-        return fetch(view, this.params);
-    }
-
-    protected final String fetch(String view, Map<String, Object> params) {
-        String result = null;
-
-        VelocityEngine engine = getVeloEngine();
-        VelocityContext context = new VelocityContext();
-
-        view = new StringBuilder().append(view).append(!view.endsWith(".htm") ? ".htm" : "").toString();
-
-        org.apache.velocity.tools.generic.EscapeTool esc = new org.apache.velocity.tools.generic.EscapeTool();
-        
-        context.put("APP", this.app);
-        context.put("esc", new org.apache.velocity.tools.generic.EscapeTool());
-        if (params != null) {
-            for (Map.Entry entry : params.entrySet()) {
-                context.put((String) entry.getKey(), entry.getValue());
-            }
-        }
-        try {
-            StringWriter sw = new StringWriter();
-
-            engine.mergeTemplate(view, "UTF-8", context, sw);
-
-            result = sw.toString();
-
-            sw.close();
-        } catch (IOException ex) {
-            result = ex.toString();
-        } catch (Exception ex) {
-            result = ex.toString();
-        }
-        return result;
-    }
     
     protected final String clean(String input) {
         return Jsoup.parse(input).text();
@@ -497,6 +357,10 @@ public abstract class Controller {
 
     protected final void setContentType(String contentType) {
         this.contentType = contentType;
+    }
+    
+    protected void setTemplate(String template) {
+        this.template = template;
     }
 
     protected final void assign(String key, Object value) {
@@ -520,8 +384,9 @@ public abstract class Controller {
             if ((this.files != null) && (this.files.containsKey(name))) {
                 return ((FileItem) this.files.get(name)).getInputStream();
             }
-        } catch (Exception e) {
-            _log.error("file not found", e);
+        } catch (Exception ex) {
+            _log.error("file not found", ex);
+            throw new RuntimeException(ex);
         }
         return null;
     }
@@ -642,51 +507,63 @@ public abstract class Controller {
     protected final Boolean isEmpty(String value) {
         return Boolean.valueOf((value == null) || (value.equals("")));
     }
-
-    protected final void renderOld() {
-        renderOld(this.action);
+    
+    public Result status(int statusCode) {
+        String template = new StringBuilder().append(controller).append("/")
+                .append(this.template).append(!this.template.endsWith(".htm") ? ".htm" : "")
+                .toString();
+        
+        params.put("APP", app);
+        global.put("APP", app);
+        
+        Result result = new Result(statusCode);
+        result.setParams(params, global);
+        result.setTemplate(template);
+        
+        return result;
+    }
+    
+    public Result ok() {
+        return status(Result.SC_200_OK);
     }
 
-    protected final void renderOld(String view) {
-        if ((this.redirect.booleanValue()) || (this.output != null)) {
-            return;
-        }
-        this.output = null;
-        this.response.setContentType(this.contentType);
-        view = new StringBuilder().append("/WEB-INF/views/").append(this.controller).append("/").append(view).append(!view.endsWith(".jsp") ? ".jsp" : "").toString();
-        try {
-            this.request.setAttribute("siteTitle", this.title);
-            this.request.setAttribute("view", view);
-            if (this.params != null) {
-                for (Map.Entry entry : this.params.entrySet()) {
-                    this.request.setAttribute((String) entry.getKey(), entry.getValue());
-                }
-            }
-            RequestDispatcher dispatcher = this.request.getRequestDispatcher("/WEB-INF/views/layout/main.jsp");
-            dispatcher.include(this.request, this.response);
-        } catch (ServletException ex) {
-            output("ServletException");
-        } catch (IOException ex) {
-            output("IOException");
-        }
+    public Result notFound() {
+        return status(Result.SC_404_NOT_FOUND);
     }
 
-    protected final void renderPart() {
-        renderPart(this.action);
+    public Result forbidden() {
+        return status(Result.SC_403_FORBIDDEN);
     }
 
-    protected final void renderPart(String view) {
-        if ((this.redirect.booleanValue()) || (this.output != null)) {
-            return;
-        }
-        this.output = null;
-        contentType(this.contentType);
-        view = new StringBuilder().append("/WEB-INF/views/").append(this.controller).append("/").append(view).append(!view.endsWith(".jsp") ? ".jsp" : "").toString();
-        try {
-            RequestDispatcher dispatcher = this.request.getRequestDispatcher(view);
-            dispatcher.forward(this.request, this.response);
-        } catch (ServletException ex) {
-        } catch (IOException ex) {
-        }
+    public Result badRequest() {
+        return status(Result.SC_400_BAD_REQUEST);
+    }
+
+    public Result internalServerError() {
+        return status(Result.SC_500_INTERNAL_SERVER_ERROR);
+    }
+    
+    public Result text() {
+        return status(Result.SC_200_OK).renderable(false).text();
+    }
+    
+    public Result text(Object content) {
+        return text().content(content.toString());
+    }
+    
+    public Result html() {
+        return status(Result.SC_200_OK).html();
+    }
+
+    public Result json() {
+        return status(Result.SC_200_OK).json();
+    }
+
+    public Result jsonp() {
+        return status(Result.SC_200_OK).jsonp();
+    }
+
+    public Result xml() {       
+        return status(Result.SC_200_OK).xml();
     }
 }

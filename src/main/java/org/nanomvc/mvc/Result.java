@@ -8,6 +8,8 @@ package org.nanomvc.mvc;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.nanomvc.Renderer;
+import org.nanomvc.VelocityRenderer;
 
 /**
  *
@@ -43,24 +45,52 @@ public class Result
     public static final String CACHE_CONTROL = "Cache-Control";
     public static final String CACHE_CONTROL_DEFAULT_NOCACHE_VALUE = "no-cache, no-store, max-age=0, must-revalidate";
     
+    public static final String DATE = "Date";
+    public static final String EXPIRES = "Expires";
+    
+    private boolean renderable = true;
     private int statusCode;
     private String contentType;
     private String charset;
     private String content;
-
-    private Map<String, String> headers;
+    private String template;
+    private Map<String, Map<String, Object>> params;
     
     public Result(int statusCode) {
 
         this.statusCode = statusCode;
         this.charset = "utf-8";
 
-        this.headers = new HashMap<>();
-
+    }
+    
+    public int getStatusCode() {
+        return statusCode;
     }
     
     public void setContent(String content) {
         this.content = content;
+    }
+    
+    public String getTemplate() {
+        return template;
+    }
+    
+    public void setTemplate(String template) {
+        this.template = template;
+    }
+
+    public Map<String, Map<String, Object>> getParams() {
+        return params;
+    }
+
+    public void setParams(Map<String, Object> paramsPrivate, Map<String, Object> paramsPublic) {
+        params = new HashMap<>();
+        params.put("private", paramsPrivate);
+        params.put("public", paramsPublic);
+    }
+
+    public void setParams(Map<String, Map<String, Object>> params) {
+        this.params = params;
     }
     
     public Result content(String content) {
@@ -93,7 +123,25 @@ public class Result
         return this;
     }
     
-    public String render() {
+    public String getContent() {
         return content;
+    }
+    
+    public Map<String, String> getHeaders() {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", contentType + "; charset=" + charset);
+        headers.put("Server", "Server");
+        headers.put(CACHE_CONTROL, CACHE_CONTROL_DEFAULT_NOCACHE_VALUE);
+        
+        return headers;
+    }
+    
+    public boolean isRenderable() {
+        return renderable;
+    }
+    
+    public Result renderable(boolean renderable) {
+        this.renderable = renderable;
+        return this;
     }
 }

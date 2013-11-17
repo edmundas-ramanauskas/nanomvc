@@ -35,7 +35,15 @@ public class Model {
         this.modelClass = modelClass;
     }
 
-    public Model setOrder(String field, int order) {
+    public void setOrder(String field, int order) {
+        if (order == 1) {
+            this.order = Order.desc(field);
+        } else {
+            this.order = Order.asc(field);
+        }
+    }
+
+    public Model order(String field, int order) {
         if (order == 1) {
             this.order = Order.desc(field);
         } else {
@@ -44,29 +52,69 @@ public class Model {
         return this;
     }
 
-    public Model setLimit(Integer limit) {
+    public void setLimit(Integer limit) {
+        this.limit = limit;
+    }
+
+    public void setLimit(Integer limit, Integer offset) {
+        this.limit = limit;
+        this.offset = offset;
+    }
+
+    public Model limit(Integer limit) {
         this.limit = limit;
         return this;
     }
 
-    public Model setLimit(Integer limit, Integer offset) {
+    public Model limit(Integer limit, Integer offset) {
         this.limit = limit;
         this.offset = offset;
         return this;
     }
     
-    public Model addAlias(String name, String alias) {
+    public void addAlias(String name, String alias) {
+        if(this.alias == null)
+            this.alias = new HashMap<>();
+        this.alias.put(name, alias);
+    }
+    
+    public Model alias(String name, String alias) {
         if(this.alias == null)
             this.alias = new HashMap<>();
         this.alias.put(name, alias);
         return this;
     }
 
-    public Model addCriteria(String key, Object value) {
-        return addCriteria(key, value, Boolean.valueOf(true));
+    public void addCriteria(String key, Object value) {
+        addCriteria(key, value, Boolean.valueOf(true));
     }
 
-    public Model addCriteria(String key, Object value, Boolean eq) {
+    public void addCriteria(String key, Object value, Boolean eq) {
+        if (eq.booleanValue()) {
+            if (criteriaEQ == null) {
+                criteriaEQ = new HashMap();
+            }
+            criteriaEQ.put(key, value);
+        } else {
+            if (criteriaNE == null) {
+                criteriaNE = new HashMap();
+            }
+            criteriaNE.put(key, value);
+        }
+    }
+
+    public void addCriteria(Map params) {
+        if (criteriaEQ == null) {
+            criteriaEQ = new HashMap();
+        }
+        criteriaEQ.putAll(params);
+    }
+
+    public Model criteria(String key, Object value) {
+        return criteria(key, value, Boolean.valueOf(true));
+    }
+
+    public Model criteria(String key, Object value, Boolean eq) {
         if (eq.booleanValue()) {
             if (criteriaEQ == null) {
                 criteriaEQ = new HashMap();
@@ -81,7 +129,7 @@ public class Model {
         return this;
     }
 
-    public Model addCriteria(Map params) {
+    public Model criteria(Map params) {
         if (criteriaEQ == null) {
             criteriaEQ = new HashMap();
         }
