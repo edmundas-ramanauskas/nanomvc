@@ -52,7 +52,7 @@ public class Result
     private int statusCode;
     private String contentType;
     private String charset;
-    private String content;
+    private Object content;
     private String template;
     private Map<String, Map<String, Object>> params;
     
@@ -93,7 +93,7 @@ public class Result
         this.params = params;
     }
     
-    public Result content(String content) {
+    public Result content(Object content) {
         this.content = content;
         return this;
     }
@@ -113,17 +113,12 @@ public class Result
         return this;
     }
 
-    public Result jsonp() {
-        contentType = APPLICATON_JSONP;
-        return this;
-    }
-
     public Result xml() {
         contentType = APPLICATION_XML;
         return this;
     }
     
-    public String getContent() {
+    public Object getContent() {
         return content;
     }
     

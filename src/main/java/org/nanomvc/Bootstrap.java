@@ -277,7 +277,7 @@ public class Bootstrap extends HttpServlet
             renderer.configure(getServletContext(), viewsPath, result.getParams());
             output(renderer.render(result.getTemplate()));
         } else {
-            output(result.getContent());
+            output(result.getContent().toString());
         }
     }
 

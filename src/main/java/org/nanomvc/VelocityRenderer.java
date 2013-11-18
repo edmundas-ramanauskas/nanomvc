@@ -77,10 +77,9 @@ public class VelocityRenderer implements Renderer
             result = sw.toString();
 
             sw.close();
-        } catch (IOException ex) {
-            
         } catch (Exception ex) {
-            _log.error(ex.toString(), ex);
+            _log.error("Template render error", ex);
+            throw new RuntimeException(ex);
         }
         
         return result;
@@ -117,7 +116,7 @@ public class VelocityRenderer implements Renderer
 
             sw.close();
         } catch (Exception ex) {
-            _log.error("template fetch error", ex);
+            _log.error("Template fetch error", ex);
             throw new RuntimeException(ex);
         }
         return result;

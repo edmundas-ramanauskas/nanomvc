@@ -1,5 +1,6 @@
 package org.nanomvc.mvc;
 
+import com.google.gson.Gson;
 import org.nanomvc.Application;
 import org.nanomvc.http.LocalFile;
 import org.nanomvc.utils.RequestUtil;
@@ -419,6 +420,30 @@ public abstract class Controller
         }
         return this.request.getParameter(key);
     }
+    
+    protected final String getParamString(String key) {
+        return getParam(key);
+    }
+    
+    protected final Integer getParamInt(String key) {
+        return getParamInteger(key);
+    }
+    
+    protected final Integer getParamInteger(String key) {
+        return Integer.valueOf(getParam(key));
+    }
+    
+    protected final Long getParamLong(String key) {
+        return Long.valueOf(getParam(key));
+    }
+    
+    protected final Double getParamDouble(String key) {
+        return Double.valueOf(getParam(key));
+    }
+    
+    protected final Float getParamFloat(String key) {
+        return Float.valueOf(getParam(key));
+    }
 
     protected final String[] getValues(String key) {
         return this.request.getParameterValues(key);
@@ -500,7 +525,7 @@ public abstract class Controller
     }
 
     protected final Boolean isAjax() {
-        String xReq = this.request.getHeader("X-Requested-With");
+        String xReq = request.getHeader("X-Requested-With");
         return Boolean.valueOf((xReq != null) && (xReq.toLowerCase().startsWith("xmlhttprequest")));
     }
 
@@ -556,14 +581,18 @@ public abstract class Controller
     }
 
     public Result json() {
-        return status(Result.SC_200_OK).json();
+        return status(Result.SC_200_OK).renderable(false).json();
     }
 
-    public Result jsonp() {
-        return status(Result.SC_200_OK).jsonp();
+    public Result json(Object content) {
+        return json().content(toJson(content));
     }
 
     public Result xml() {       
         return status(Result.SC_200_OK).xml();
+    }
+    
+    protected static String toJson(Object obj) {
+        return new Gson().toJson(obj);
     }
 }
