@@ -28,9 +28,6 @@ public class Model {
     private Integer offset;
     private Class modelClass;
 
-    public Model() {
-    }
-
     public Model(Class modelClass) {
         this.modelClass = modelClass;
     }
@@ -259,7 +256,6 @@ public class Model {
 
     private Criteria createCriteria() {
         session = HibernateUtil.getSession();
-
         Criteria criteria = session.createCriteria(modelClass).setCacheable(cachable);
         if (limit != null) {
             criteria.setMaxResults(limit);

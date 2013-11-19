@@ -54,6 +54,7 @@ public class Result
     private String charset;
     private Object content;
     private String template;
+    private String link;
     private Map<String, Map<String, Object>> params;
     
     public Result(int statusCode) {

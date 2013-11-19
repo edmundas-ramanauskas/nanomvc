@@ -45,8 +45,6 @@ public class Bootstrap extends HttpServlet
     private static final String DefaultAction = "index";
     private static final String InitMethod = "init";
     private static final String ConfigMethod = "config";
-    private static final String FlushMethod = "flush";
-    private static final String RoutesMethod = "routes";
     
     protected Map<String, Object> files;
     protected Map<String, String> fields;
@@ -147,11 +145,11 @@ public class Bootstrap extends HttpServlet
             Object co = constructor.newInstance(new Object[0]);
             Method method = null;
             try {
-                method = cc.getMethod("config", new Class[]{HttpServletRequest.class, HttpServletResponse.class, ServletContext.class, String.class, String.class, String.class, Router.class, Map.class, Map.class});
+                method = cc.getMethod(ConfigMethod, new Class[]{HttpServletRequest.class, HttpServletResponse.class, ServletContext.class, String.class, String.class, String.class, Router.class, Map.class, Map.class});
 
                 method.invoke(co, new Object[]{request, response, getServletContext(), this.viewsPath, req.getController(), req.getAction(), handler.getRouter(), this.files, this.fields});
 
-                method = cc.getMethod("init", new Class[0]);
+                method = cc.getMethod(InitMethod, new Class[0]);
                 method.invoke(co, new Object[0]);
 
                 Method[] allMethods = cc.getMethods();

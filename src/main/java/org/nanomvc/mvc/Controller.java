@@ -11,17 +11,27 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import javax.imageio.ImageIO;
@@ -32,6 +42,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.lang.StringUtils;
 import org.apache.velocity.Template;
@@ -59,13 +70,8 @@ public abstract class Controller
     private String action;
     private String viewsPath;
     private String template;
-    private static VelocityEngine veloEngine;
-    private Boolean redirect = Boolean.valueOf(false);
-    private StringBuffer output;
     private Map<String, Object> params;
     private Map<String, Object> global;
-    private String contentType = "text/html; charset=UTF-8";
-    private String title = "";
     private Application app;
     protected static final int IMG_CROP = 1;
     protected static final int IMG_RESIZE = 2;
@@ -351,32 +357,22 @@ public abstract class Controller
     protected final String clean(String input) {
         return Jsoup.parse(input).text();
     }
-
-    protected final void contentType(String value) {
-        this.response.setContentType(value);
-    }
-
-    protected final void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
     
     protected void setTemplate(String template) {
         this.template = template;
     }
 
     protected final void assign(String key, Object value) {
-        if ((!this.redirect.booleanValue()) && (this.output == null)) {
-            if (key.startsWith("main.")) {
-                if (this.global == null) {
-                    this.global = new HashMap();
-                }
-                this.global.put(key.substring("main.".length()), value);
-            } else {
-                if (this.params == null) {
-                    this.params = new HashMap();
-                }
-                this.params.put(key, value);
+        if (key.startsWith("main.")) {
+            if (this.global == null) {
+                this.global = new HashMap();
             }
+            this.global.put(key.substring("main.".length()), value);
+        } else {
+            if (this.params == null) {
+                this.params = new HashMap();
+            }
+            this.params.put(key, value);
         }
     }
 
@@ -469,21 +465,6 @@ public abstract class Controller
         this.request.getSession().invalidate();
     }
 
-    protected final void redirect(String url) {
-        this.output = null;
-        this.redirect = Boolean.valueOf(true);
-        try {
-            if (url.startsWith("http")) {
-                this.response.sendRedirect(url);
-            } else if (url.startsWith("/")) {
-                this.response.sendRedirect(new StringBuilder().append(getBaseUrl()).append(url).toString());
-            } else {
-                this.response.sendRedirect(new StringBuilder().append(getBaseUrl()).append("/").append(url).toString());
-            }
-        } catch (IOException ex) {
-        }
-    }
-
     protected final String getUrlPath() {
         return this.request.getServletPath();
     }
@@ -533,6 +514,14 @@ public abstract class Controller
         return Boolean.valueOf((value == null) || (value.equals("")));
     }
     
+    protected final void parseData(Object bean) {
+        try {
+            BeanUtils.populate(bean, request.getParameterMap());
+        } catch (IllegalAccessException | InvocationTargetException ex) {
+            _log.error("BeanUtils", ex);
+        }
+    }
+    
     public Result status(int statusCode) {
         String template = new StringBuilder().append(controller).append("/")
                 .append(this.template).append(!this.template.endsWith(".htm") ? ".htm" : "")
@@ -546,6 +535,10 @@ public abstract class Controller
         result.setTemplate(template);
         
         return result;
+    }
+    
+    public Result redirect(String url) {
+        return status(Result.SC_303_SEE_OTHER);
     }
     
     public Result ok() {
