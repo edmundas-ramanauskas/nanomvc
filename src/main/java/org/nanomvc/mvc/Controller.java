@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageInputStream;
@@ -52,6 +53,7 @@ import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.imgscalr.Scalr;
 import org.jsoup.Jsoup;
+import org.nanomvc.utils.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -159,56 +161,11 @@ public abstract class Controller
     }
 
     public void thumb(String image, String path, int width, int height, int method) {
-        File newImageFile = new File(getImagePath(image, new StringBuilder().append(path).append("/").append(width).append("x").append(height).toString()));
-//        if (!newImageFile.exists()) {
-            try {
-                File dir = new File(getImagesPath(new StringBuilder().append(path).append("/").append(width).append("x").append(height).toString()));
-                if (!dir.exists()) {
-                    dir.mkdirs();
-                }
-                File oldImageFile = new File(getImagePath(image, path));
-                ImageInputStream is = ImageIO.createImageInputStream(oldImageFile);
-                BufferedImage srcImage = ImageIO.read(is);
-                BufferedImage scaledImage = null;
-                switch (method) {
-                    case IMG_CROP:
-                        scaledImage = Scalr.crop(srcImage, width, height);
-                        break;
-                    case IMG_RESIZE:
-                    default:
-                        scaledImage = Scalr.resize(srcImage, Scalr.Mode.AUTOMATIC, width, height);
-                        break;
-                    case IMG_RESIZE_CROP:
-                        int rWidth = width;
-                        int rHeight = height;
-                        double fWidth = ((double)srcImage.getWidth() / ((double)srcImage.getHeight() / (double)height));
-                        double fHeight = ((double)srcImage.getHeight() / ((double)srcImage.getWidth() / (double)width));
-                        Scalr.Mode mode = Scalr.Mode.FIT_TO_WIDTH;
-                        if (srcImage.getWidth() > srcImage.getHeight()) {
-                            mode = Scalr.Mode.FIT_TO_HEIGHT;
-                            if (width > fWidth) {
-                                rHeight = (int)fHeight + ((fHeight > (int)fHeight) ? 1 : 0);
-                            } else {
-                                
-                            }
-                        } else if (height > fHeight) {
-                            rWidth = (int)fWidth + ((fWidth > (int)fWidth) ? 1 : 0);
-                        }
-                        scaledImage = Scalr.resize(srcImage, mode, rWidth, rHeight);
-                        scaledImage = Scalr.crop(scaledImage, width, height);
-                }
+        try {
+            FileUtil.thumb(image, getImagesPath(path), width, height, method);
+        } catch (IOException ex) {
 
-                String format = RequestUtil.getImageFormat(RequestUtil.getMimeType(oldImageFile));
-                if(ImageIO.write(scaledImage, format, newImageFile))
-                    _log.info("resize success");
-                else
-                    _log.info("resize failed");
-                scaledImage.flush();
-                srcImage.flush();
-            } catch (IOException ex) {
-//                _log.error(ex.toString());
-            }
-//        }
+        }
     }
 
     protected final String saveImageFromUrl(String url, String filename) {
@@ -444,14 +401,6 @@ public abstract class Controller
     protected final String[] getValues(String key) {
         return this.request.getParameterValues(key);
     }
-    
-    protected final void fillPostData(Object obj) {
-        try {
-            org.apache.commons.beanutils.BeanUtils.populate(obj, request.getParameterMap());
-        } catch (IllegalAccessException | InvocationTargetException ex) {
-            _log.error("fillPostData", ex);
-        }
-    }
 
     protected final void storeSet(String key, Object value) {
         this.request.getSession().setAttribute(key, value);
@@ -495,7 +444,7 @@ public abstract class Controller
         return createUrl(controller, action, null);
     }
 
-    protected final String createUrl(String controller, String action, Object[] params) {
+    protected final String createUrl(String controller, String action, Object... params) {
         String route = new StringBuilder().append(controller.substring(0, 1).toUpperCase()).append(controller.substring(1).toLowerCase()).append(".").append(action.toLowerCase()).toString();
 
         String url = new StringBuilder().append("/").append(controller).append("/").append(action).toString();
@@ -517,28 +466,41 @@ public abstract class Controller
     protected final void parseData(Object bean) {
         try {
             BeanUtils.populate(bean, request.getParameterMap());
+            BeanUtils.populate(bean, fields);
         } catch (IllegalAccessException | InvocationTargetException ex) {
             _log.error("BeanUtils", ex);
         }
     }
     
-    public Result status(int statusCode) {
-        String template = new StringBuilder().append(controller).append("/")
+    protected final void submitJob(Runnable job) {
+        ExecutorService executor = (ExecutorService) context.getAttribute("NANOMVC_EXECUTOR");
+        executor.submit(job);
+    }
+    
+    private String getTemplate() {
+        return new StringBuilder().append(controller).append("/")
                 .append(this.template).append(!this.template.endsWith(".htm") ? ".htm" : "")
                 .toString();
-        
+    }
+    
+    private String getTemplate(String template) {
+        this.template = template;
+        return getTemplate();
+    }
+    
+    public Result status(int statusCode) {
         params.put("APP", app);
         global.put("APP", app);
         
         Result result = new Result(statusCode);
         result.setParams(params, global);
-        result.setTemplate(template);
+        result.setTemplate(getTemplate());
         
         return result;
     }
     
     public Result redirect(String url) {
-        return status(Result.SC_303_SEE_OTHER);
+        return status(Result.SC_303_SEE_OTHER).link(url);
     }
     
     public Result ok() {
@@ -571,6 +533,10 @@ public abstract class Controller
     
     public Result html() {
         return status(Result.SC_200_OK).html();
+    }
+    
+    public Result html(String template) {
+        return html().template(getTemplate(template));
     }
 
     public Result json() {

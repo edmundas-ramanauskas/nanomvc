@@ -21,15 +21,17 @@ public class HibernateUtil
         try {
             Configuration configuration = new Configuration();
             if (configFile != null) {
+                _log.info("Hibernate configuration file: " + configFile);
                 configuration.configure(configFile);
             } else {
+                _log.warn("No configuration file");
                 configuration.configure();
             }
             ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(configuration.getProperties()).buildServiceRegistry();
 
             return configuration.buildSessionFactory(serviceRegistry);
         } catch (Throwable ex) {
-            ex.printStackTrace();
+            _log.error("Error initializing", ex);
             throw new ExceptionInInitializerError(ex);
         }
     }

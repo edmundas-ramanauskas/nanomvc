@@ -17,6 +17,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Level;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -269,6 +270,14 @@ public class Bootstrap extends HttpServlet
         response.setStatus(result.getStatusCode());
         for(Entry<String, String> entry : result.getHeaders().entrySet()) {
             response.setHeader(entry.getKey(), entry.getValue());
+        }
+        if(result.getStatusCode() >= 300 && result.getStatusCode() < 400) {
+            try {
+                response.sendRedirect(result.getLink());
+                return;
+            } catch (IOException ex) {
+                
+            }
         }
         if(result.isRenderable()) {
             Renderer renderer = new VelocityRenderer();

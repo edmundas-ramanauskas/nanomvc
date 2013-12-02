@@ -3,7 +3,9 @@ package org.nanomvc.utils;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -148,7 +150,7 @@ public final class RequestUtil {
         return StringUtils.join(parts, "&");
     }
 
-    private static String getData(InputStream is) throws IOException {
+    public static String getData(InputStream is) throws IOException {
         BufferedReader rd = new BufferedReader(new InputStreamReader(is));
         StringBuffer sb = new StringBuffer();
         String line;
@@ -159,7 +161,7 @@ public final class RequestUtil {
         return sb.toString();
     }
 
-    private static String getData(String url) throws IOException {
+    public static String getData(String url) throws IOException {
         URL requestUrl = new URL(url);
 
         URLConnection conn = requestUrl.openConnection();
@@ -170,5 +172,29 @@ public final class RequestUtil {
 
     public static enum FORMAT {
         JPG, PNG, GIF, BMP;
+    }
+    
+    public static void saveRemoteDataToFile(String remoteFile, String localFile) {
+        try {
+		URL url = new URL(remoteFile);
+		InputStream is = url.openStream();
+		ByteArrayOutputStream os = new ByteArrayOutputStream();			
+		byte[] buf = new byte[4096];
+		int n;			
+		while ((n = is.read(buf)) >= 0)
+                    os.write(buf, 0, n);
+		os.close();
+		is.close();			
+		byte[] data = os.toByteArray();
+                
+                FileOutputStream out = new FileOutputStream(localFile);
+                out.write(data);
+                out.flush();
+                out.close();
+	} catch (MalformedURLException e) {
+		e.printStackTrace();
+	} catch (IOException e) {
+		e.printStackTrace();
+	}
     }
 }

@@ -67,9 +67,21 @@ public class Result
     public int getStatusCode() {
         return statusCode;
     }
+
+    public String getLink() {
+        return link;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
+    }
     
     public void setContent(String content) {
         this.content = content;
+    }
+    
+    public Object getContent() {
+        return content;
     }
     
     public String getTemplate() {
@@ -94,8 +106,18 @@ public class Result
         this.params = params;
     }
     
+    public Result link(String link) {
+        this.link = link;
+        return this;
+    }
+    
     public Result content(Object content) {
         this.content = content;
+        return this;
+    }
+    
+    public Result template(String template) {
+        this.template = template;
         return this;
     }
 
@@ -117,10 +139,6 @@ public class Result
     public Result xml() {
         contentType = APPLICATION_XML;
         return this;
-    }
-    
-    public Object getContent() {
-        return content;
     }
     
     public Map<String, String> getHeaders() {
