@@ -13,6 +13,9 @@ import org.slf4j.LoggerFactory;
 public class Application {
 
     private static Logger _log = LoggerFactory.getLogger(Application.class);
+    
+    private String controller;
+    private String action;
     private String baseUrl;
     private String currentUrl;
     private Router router;
@@ -21,12 +24,10 @@ public class Application {
     public Application() {
     }
 
-    public Application(String baseUrl, String currentUrl) {
-        this.baseUrl = baseUrl;
-        this.currentUrl = currentUrl;
-    }
-
-    public Application(String baseUrl, String currentUrl, Router router, HttpSession session) {
+    public Application(String controller, String action, String baseUrl, 
+            String currentUrl, Router router, HttpSession session) {
+        this.controller = controller;
+        this.action = action;
         this.baseUrl = baseUrl;
         this.currentUrl = currentUrl;
         this.router = router;
@@ -116,4 +117,52 @@ public class Application {
     public String makeSlug(String name) {
         return name;
     }
+    
+    public String pagination(Long pagesTotal, Integer currentPage) {
+        return pagination(pagesTotal, currentPage, createUrl(controller, action) + "/%d");
+    }
+    
+    public String pagination(Long pagesTotal, Integer currentPage, String pageLink) {
+	if(pagesTotal > 1000000)
+            return "You probably shouldn't do that.";
+	
+	StringBuilder sb = new StringBuilder();
+	
+	int range = 5;
+	
+	for(int i = 1; i <= pagesTotal; i++) {
+            String attributes = "";
+            String cssClass = "";
+            Boolean include = false;
+            
+            if(i == 1)
+                cssClass += " first";
+            if(i == pagesTotal)
+                cssClass += " last";
+            if(i == currentPage)
+                cssClass += " active";
+            
+            if(i == 1 || i == pagesTotal || (i > currentPage - range && i < currentPage + range)) {
+                include = true;
+            } else if(
+                    pagesTotal <= 20 || (pagesTotal <= 100 && i % 10 == 0)
+                    || (pagesTotal > 100 && pagesTotal <= 1000 && i % 100 == 0)
+                    || (pagesTotal > 1000 && pagesTotal <= 10000 && i % 1000 == 0)
+                    || (pagesTotal > 10000 && pagesTotal <= 100000 && i % 10000 == 0)
+                    || (pagesTotal > 100000 && pagesTotal <= 1000000 && i % 100000 == 0)
+                ) {
+                include = true;
+                cssClass += " grouped";
+                attributes = " style=\"display: none;\"";
+            }
+            if(include) {
+                sb.append("<li class=\"").append(cssClass).append("\"")
+                    .append(attributes).append(">").append("<a href=\"")
+                    .append(String.format(pageLink, i)).append("\">")
+                    .append(i).append("</a>").append("</li>");
+            }
+	}
+	
+	return sb.toString();
+}
 }

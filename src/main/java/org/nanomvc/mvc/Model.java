@@ -149,6 +149,13 @@ public class Model {
         session.close();
         return result;
     }
+    
+    public Object findOne(String name, Object value) {
+        Object result = createCriteria().add(Restrictions.eq(name, value)).uniqueResult();
+        
+        session.close();
+        return result;
+    }
 
     public Object find(Object id) {
         return findByPk(id);

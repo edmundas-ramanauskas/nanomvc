@@ -94,7 +94,7 @@ public abstract class Controller
         this.action = action;
         this.template = action;
 
-        this.app = new Application(getBaseUrl(), getCurrentUrl(), router, request.getSession());
+        this.app = new Application(controller, action, getBaseUrl(), getCurrentUrl(), router, request.getSession());
         
         this.params = new HashMap();
         this.global = new HashMap();
@@ -317,6 +317,16 @@ public abstract class Controller
     
     protected void setTemplate(String template) {
         this.template = template;
+    }
+    
+    protected final void assignToAll(String key, Object value) {
+        assign(key, value);
+        assignToMain(key, value);
+    }
+    
+    protected final void assignToMain(String key, Object value) {
+        key = (key.startsWith("main")) ? key : "main." + key;
+        assign(key, value);
     }
 
     protected final void assign(String key, Object value) {
