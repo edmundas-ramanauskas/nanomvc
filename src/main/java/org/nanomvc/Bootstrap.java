@@ -6,6 +6,7 @@ import org.nanomvc.http.Request;
 import org.nanomvc.http.RequestHandler;
 import org.nanomvc.exceptions.ControllerException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -17,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.logging.Level;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletConfig;
@@ -42,15 +44,14 @@ public class Bootstrap extends HttpServlet
 {
     private static Logger _log = LoggerFactory.getLogger(Bootstrap.class);
     
-    private static final String ActionPrefix = "do";
-    private static final String DefaultAction = "index";
+    private static final String ActionPrefix = "";
     private static final String InitMethod = "init";
     private static final String ConfigMethod = "config";
     
     protected Map<String, Object> files;
     protected Map<String, String> fields;
     
-    private String viewsPath;
+    private String viewsPath = "/WEB-INF/views";
     private String controllersPath;
     private String defaultController;
     private String routerClass;
@@ -59,16 +60,25 @@ public class Bootstrap extends HttpServlet
 
     public void init(ServletConfig config)
             throws ServletException {
-        this.viewsPath = config.getInitParameter("viewsPath");
-        this.controllersPath = config.getInitParameter("controllersPath");
-        this.defaultController = config.getInitParameter("defaultController");
-        this.routerClass = config.getInitParameter("routerClass");
         super.init(config);
+        
         try {
             File file = new File(getServletContext().getRealPath("/WEB-INF/conf/hibernate.cfg.xml"));
             HibernateUtil.setConfigurationFile(file);
         } catch (Exception ex) {
             _log.warn("/WEB-INF/conf/hibernate.cfg.xml is missing");
+        }
+        
+        Properties properties = new Properties();
+        try {
+            properties.load(new FileInputStream(new File(getServletContext().getRealPath("/WEB-INF/configuration.properties"))));
+        } catch (IOException ex) {
+            // ignore
+        }
+        if(!properties.isEmpty()) {
+            this.controllersPath = properties.getProperty("app.controllersPath");
+            this.defaultController = properties.getProperty("app.defaultController");
+            this.routerClass = properties.getProperty("app.routerClass");
         }
     }
 

@@ -75,6 +75,6 @@ public class Request
 
   public String getControllerMethodName() {
     this.action = (this.action == null ? "index" : this.action);
-    return "do" + this.action.substring(0, 1).toUpperCase() + this.action.substring(1).toLowerCase();
+    return this.action;
   }
 }

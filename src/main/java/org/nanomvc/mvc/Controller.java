@@ -4,54 +4,27 @@ import com.google.gson.Gson;
 import org.nanomvc.Application;
 import org.nanomvc.http.LocalFile;
 import org.nanomvc.utils.RequestUtil;
-import java.awt.image.BufferedImage;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.math.BigDecimal;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-import java.util.logging.Level;
-import javax.imageio.ImageIO;
-import javax.imageio.stream.ImageInputStream;
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.lang.StringUtils;
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.exception.ParseErrorException;
-import org.apache.velocity.exception.ResourceNotFoundException;
-import org.imgscalr.Scalr;
 import org.jsoup.Jsoup;
 import org.nanomvc.utils.FileUtil;
 import org.slf4j.Logger;
@@ -105,59 +78,6 @@ public abstract class Controller
 
     protected String getPath() {
         return context.getRealPath("/");
-    }
-
-    protected void call(String action) {
-        if (action != null) {
-            this.action = action;
-            String actionName = new StringBuilder().append("do").append(action.substring(0, 1).toUpperCase()).append(action.substring(1).toLowerCase()).toString();
-            try {
-                String path = this.request.getServletPath();
-                List args = null;
-
-                if (!path.equals("/")) {
-                    List parts = Arrays.asList(path.split("/"));
-                    parts = parts.subList(1, parts.size());
-                    switch (parts.size()) {
-                        case 0:
-                        case 1:
-                        case 2:
-                            break;
-                        default:
-                            args = parts.subList(2, parts.size());
-                    }
-
-                }
-
-                Method[] allMethods = getClass().getDeclaredMethods();
-                for (Method m : allMethods) {
-                    if (m.getName().equals(actionName)) {
-                        Class[] params = m.getParameterTypes();
-                        Object[] arguments = new Object[params.length];
-                        for (int i = 0; i < params.length; i++) {
-                            try {
-                                arguments[i] = args.get(i);
-                            } catch (Exception ex) {
-                                arguments[i] = null;
-                            }
-                        }
-
-                        Method method = getClass().getMethod(actionName, params);
-
-                        if (params.length == 0) {
-                            method.invoke(this, new Object[0]);
-                        } else {
-                            method.invoke(this, arguments);
-                        }
-                    }
-                }
-            } catch (NoSuchMethodException ex) {
-            } catch (SecurityException ex) {
-            } catch (IllegalAccessException ex) {
-            } catch (IllegalArgumentException ex) {
-            } catch (InvocationTargetException ex) {
-            }
-        }
     }
 
     public void thumb(String image, String path, int width, int height, int method) {
@@ -488,9 +408,10 @@ public abstract class Controller
     }
     
     private String getTemplate() {
-        return new StringBuilder().append(controller).append("/")
-                .append(this.template).append(!this.template.endsWith(".htm") ? ".htm" : "")
-                .toString();
+        String template = (this.template.indexOf('/') > 0) ? this.template : 
+                new StringBuilder().append(controller).append("/")
+                .append(this.template).toString();
+        return template + (!this.template.endsWith(".htm") ? ".htm" : "");
     }
     
     private String getTemplate(String template) {
@@ -501,6 +422,8 @@ public abstract class Controller
     public Result status(int statusCode) {
         params.put("APP", app);
         global.put("APP", app);
+        params.put("app", app);
+        global.put("app", app);
         
         Result result = new Result(statusCode);
         result.setParams(params, global);
