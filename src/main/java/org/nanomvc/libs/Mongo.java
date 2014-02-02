@@ -5,7 +5,6 @@ import com.google.code.morphia.Key;
 import com.google.code.morphia.MapreduceResults;
 import com.google.code.morphia.MapreduceType;
 import com.google.code.morphia.Morphia;
-import com.google.code.morphia.query.FieldEnd;
 import com.google.code.morphia.query.Query;
 import com.mongodb.MongoURI;
 import java.net.UnknownHostException;
@@ -14,11 +13,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import org.bson.types.ObjectId;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,27 +41,7 @@ public class Mongo {
     private void init() {
         try {
             if (ds == null) {
-                try {
-                    String services = System.getenv("VCAP_SERVICES");
-                    try {
-                        JSONObject json = new JSONObject(services);
-                        Iterator iter = json.keys();
-                        while (iter.hasNext()) {
-                            String key = iter.next().toString();
-                            if (key.startsWith("mongo")) {
-                                String url = json.getJSONArray(key).getJSONObject(0).getJSONObject("credentials").getString("url");
-                                String db = json.getJSONArray(key).getJSONObject(0).getJSONObject("credentials").getString("db");
-                                com.mongodb.Mongo m = new com.mongodb.Mongo(new MongoURI(url));
-                                ds = new Morphia().createDatastore(m, db);
-                                break;
-                            }
-                        }
-                    } catch (JSONException ex) {
-                        throw new Exception("");
-                    }
-                } catch (Throwable t) {
-                    ds = new Morphia().createDatastore(new com.mongodb.Mongo(), this.database);
-                }
+                ds = new Morphia().createDatastore(new com.mongodb.Mongo(), this.database);
                 ds.ensureIndexes();
             }
         } catch (UnknownHostException | NullPointerException ex) {

@@ -33,8 +33,6 @@ import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.BasicConfigurator;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.nanomvc.mvc.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -303,16 +301,7 @@ public class Bootstrap extends HttpServlet
             Long time = Long.valueOf(System.currentTimeMillis() - this.startTime);
             String path = request.getServletPath();
             if (time > 100) {
-                try {
-                    JSONObject req = new JSONObject();
-                    JSONObject arr = new JSONObject();
-                    arr.put("path", path);
-                    arr.put("time", time);
-                    req.put("request", arr);
-                    _log.info(req.toString());
-                } catch (JSONException je) {
-
-                }
+//                _log.info();
             }
         } catch (Exception e) {
 
