@@ -290,7 +290,10 @@ public class Bootstrap extends HttpServlet
         if(result.isRenderable()) {
             Renderer renderer = new VelocityRenderer();
             renderer.configure(getServletContext(), viewsPath, result.getParams());
-            output(renderer.render(result.getTemplate()));
+            if(!result.isLayoutEnabled())
+                output(renderer.fetch(result.getTemplate()));
+            else
+                output(renderer.render(result.getTemplate()));
         } else {
             output(result.getContent().toString());
         }

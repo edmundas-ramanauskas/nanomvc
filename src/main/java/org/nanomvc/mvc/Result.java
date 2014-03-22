@@ -49,6 +49,7 @@ public class Result
     public static final String EXPIRES = "Expires";
     
     private boolean renderable = true;
+    private boolean layoutEnabled = true;
     private int statusCode;
     private String contentType;
     private String charset;
@@ -157,5 +158,14 @@ public class Result
     public Result renderable(boolean renderable) {
         this.renderable = renderable;
         return this;
+    }
+    
+    public Result disableLayout() {
+        layoutEnabled = false;
+        return this;
+    }
+    
+    public boolean isLayoutEnabled() {
+        return layoutEnabled;
     }
 }
