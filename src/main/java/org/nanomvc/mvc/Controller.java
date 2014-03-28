@@ -109,7 +109,7 @@ public abstract class Controller
                 path = new StringBuilder().append(SLASH).append(path).toString();
             }
             return RequestUtil.saveImage(url, new StringBuilder().append(getPath())
-                    .append(PATH_PUBLIC_UPL).append(this.controller)
+                    .append(PATH_PUBLIC_UPL).append(controller)
                     .append(PATH_IMAGES).append(path).toString(), filename);
         } catch (IOException ex) {
         }
@@ -123,11 +123,11 @@ public abstract class Controller
     protected final String getImagesPath(String path) {
         if (path == null) {
             path = EMPTY;
-        } else if ((path != null) && (!path.equals(EMPTY)) && (!path.startsWith(SLASH))) {
+        } else if ((!path.equals(EMPTY)) && (!path.startsWith(SLASH))) {
             path = new StringBuilder().append(SLASH).append(path).toString();
         }
         return new StringBuilder().append(getPath()).append(PATH_PUBLIC_UPL)
-                .append(this.controller).append(PATH_IMAGES).append(path).toString();
+                .append(controller).append(PATH_IMAGES).append(path).toString();
     }
 
     protected final String getImagePath(String filename) {
@@ -141,7 +141,7 @@ public abstract class Controller
             path = new StringBuilder().append(SLASH).append(path).toString();
         }
         return new StringBuilder().append(getPath()).append(PATH_PUBLIC_UPL)
-                .append(this.controller).append(PATH_IMAGES).append(path)
+                .append(controller).append(PATH_IMAGES).append(path)
                 .append(SLASH).append(filename).toString();
     }
 
@@ -186,9 +186,9 @@ public abstract class Controller
 
             InputStream is = getFile(fieldName);
             String path = new StringBuilder().append(PATH_PUBLIC_UPL)
-                    .append(this.controller).append(PATH_IMAGES)
+                    .append(controller).append(PATH_IMAGES)
                     .append(pathName).toString();
-            String file = RequestUtil.saveImage(is, this.context.getRealPath(path), fileName);
+            String file = RequestUtil.saveImage(is, context.getRealPath(path), fileName);
             if (file != null) {
                 return new LocalFile(path, pathName, file);
             }
@@ -229,7 +229,7 @@ public abstract class Controller
                 return null;
             }
             String path = new StringBuilder().append(PATH_PUBLIC_UPL)
-                    .append(this.controller).append(PATH_IMAGES).append(pathName)
+                    .append(controller).append(PATH_IMAGES).append(pathName)
                     .toString();
             List files = new ArrayList();
 
@@ -239,7 +239,7 @@ public abstract class Controller
                 String name = UUID.randomUUID().toString();
                 if(fileName != null)
                     name = UUID.randomUUID().toString();
-                String file = RequestUtil.saveImage(stream, this.context.getRealPath(path), name);
+                String file = RequestUtil.saveImage(stream, context.getRealPath(path), name);
                 if (file != null) {
                     files.add(new LocalFile(path, pathName, file));
                 }
@@ -277,22 +277,22 @@ public abstract class Controller
 
     protected final void assign(String key, Object value) {
         if (key.startsWith("main.")) {
-            if (this.global == null) {
-                this.global = new HashMap();
+            if (global == null) {
+                global = new HashMap();
             }
-            this.global.put(key.substring("main.".length()), value);
+            global.put(key.substring("main.".length()), value);
         } else {
-            if (this.params == null) {
-                this.params = new HashMap();
+            if (params == null) {
+                params = new HashMap();
             }
-            this.params.put(key, value);
+            params.put(key, value);
         }
     }
 
     protected final InputStream getFile(String name) {
         try {
-            if ((this.files != null) && (this.files.containsKey(name))) {
-                return ((FileItem) this.files.get(name)).getInputStream();
+            if ((files != null) && (files.containsKey(name))) {
+                return ((FileItem) files.get(name)).getInputStream();
             }
         } catch (Exception ex) {
             _log.error("file not found", ex);
@@ -303,16 +303,16 @@ public abstract class Controller
 
     protected final List<InputStream> getFiles(String name) {
         try {
-            if ((this.files != null) && (this.files.containsKey(name))) {
+            if ((files != null) && (files.containsKey(name))) {
                 List list = new ArrayList();
-                if ((this.files.get(name) instanceof List)) {
-                    List<FileItem> files = (List) this.files.get(name);
-                    for (FileItem file : files) {
+                if ((files.get(name) instanceof List)) {
+                    List<FileItem> tFiles = (List) files.get(name);
+                    for (FileItem file : tFiles) {
                         list.add(file.getInputStream());
                     }
                     return list;
                 }
-                FileItem file = (FileItem) this.files.get(name);
+                FileItem file = (FileItem) files.get(name);
                 list.add(file.getInputStream());
 
                 return list;
@@ -355,59 +355,59 @@ public abstract class Controller
     }
 
     protected final String[] getValues(String key) {
-        return this.request.getParameterValues(key);
+        return request.getParameterValues(key);
     }
 
     protected final void storeSet(String key, Object value) {
-        this.request.getSession().setAttribute(key, value);
+        request.getSession().setAttribute(key, value);
     }
 
     protected final Object storeGet(String key) {
-        return this.request.getSession().getAttribute(key);
+        return request.getSession().getAttribute(key);
     }
 
     protected final void storeClear() {
-        this.request.getSession().invalidate();
+        request.getSession().invalidate();
     }
 
     protected final String getUrlPath() {
-        return this.request.getServletPath();
+        return request.getServletPath();
     }
 
     protected final String getBaseUrl() {
-        if ((this.request.getServerPort() == 80) || (this.request.getServerPort() == 443)) {
-            return new StringBuilder().append(this.request.getScheme())
-                    .append("://").append(this.request.getServerName())
-                    .append(this.request.getContextPath()).toString();
+        if ((request.getServerPort() == 80) || (request.getServerPort() == 443)) {
+            return new StringBuilder().append(request.getScheme())
+                    .append("://").append(request.getServerName())
+                    .append(request.getContextPath()).toString();
         }
 
-        return new StringBuilder().append(this.request.getScheme())
-                .append("://").append(this.request.getServerName())
-                .append(":").append(this.request.getServerPort())
-                .append(this.request.getContextPath()).toString();
+        return new StringBuilder().append(request.getScheme())
+                .append("://").append(request.getServerName())
+                .append(":").append(request.getServerPort())
+                .append(request.getContextPath()).toString();
     }
 
     protected final String getCurrentUrl() {
-        String requestUri = this.request.getRequestURI() != null ? 
-                this.request.getRequestURI() : EMPTY;
-        if ((this.request.getServerPort() == 80) || (this.request.getServerPort() == 443)) {
-            return new StringBuilder().append(this.request.getScheme()).append("://")
-                    .append(this.request.getServerName()).append(requestUri).toString();
+        String requestUri = request.getRequestURI() != null ? 
+                request.getRequestURI() : EMPTY;
+        if ((request.getServerPort() == 80) || (request.getServerPort() == 443)) {
+            return new StringBuilder().append(request.getScheme()).append("://")
+                    .append(request.getServerName()).append(requestUri).toString();
         }
 
-        return new StringBuilder().append(this.request.getScheme()).append("://")
-                .append(this.request.getServerName()).append(":")
-                .append(this.request.getServerPort()).append(requestUri).toString();
+        return new StringBuilder().append(request.getScheme()).append("://")
+                .append(request.getServerName()).append(":")
+                .append(request.getServerPort()).append(requestUri).toString();
     }
 
     protected final String getCurrentUrlFull() {
-        String queryString = this.request.getQueryString() != null ? 
-                this.request.getQueryString() : EMPTY;
+        String queryString = request.getQueryString() != null ? 
+                request.getQueryString() : EMPTY;
         return new StringBuilder().append(getUrlPath()).append(queryString).toString();
     }
     
     protected final String createUrl(String controller, String action) {
-        return createUrl(controller, action, null);
+        return createUrl(controller, action, (Object) null);
     }
 
     protected final String createUrl(String controller, String action, Object... params) {
@@ -417,8 +417,8 @@ public abstract class Controller
 
         String url = new StringBuilder().append(SLASH).append(controller)
                 .append(SLASH).append(action).toString();
-        if (this.router.reverseRoutes().containsKey(route)) {
-            url = (String) this.router.reverseRoutes().get(route);
+        if (router.reverseRoutes().containsKey(route)) {
+            url = (String) router.reverseRoutes().get(route);
         }
         return new StringBuilder().append(getBaseUrl()).append(url)
                 .append(params != null ? new StringBuilder().append(SLASH)
@@ -433,7 +433,7 @@ public abstract class Controller
     }
 
     protected final Boolean isEmpty(String value) {
-        return Boolean.valueOf((value == null) || (value.equals(EMPTY)));
+        return (value == null || value.equals(EMPTY));
     }
     
     protected final void parseData(Object bean) {
@@ -457,7 +457,7 @@ public abstract class Controller
         return template + (!this.template.endsWith(".htm") ? ".htm" : EMPTY);
     }
     
-    private String getTemplate(String template) {
+    private String template(String template) {
         this.template = template;
         return getTemplate();
     }
@@ -512,7 +512,7 @@ public abstract class Controller
     }
     
     protected Result html(String template) {
-        return html().template(getTemplate(template));
+        return html().template(template(template)); // triple template :)
     }
 
     protected Result json() {
