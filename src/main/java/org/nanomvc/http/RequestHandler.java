@@ -29,7 +29,7 @@ public class RequestHandler {
         this.router = router;
     }
 
-    public Request parseRequest() {
+    public Request parseRequest(String defaultController) {
         Request request = null;
         Map routes = null;
         String controller = null;
@@ -104,7 +104,7 @@ public class RequestHandler {
             }
         }
 
-        request = new Request(controller, action, args);
+        request = new Request(defaultController, controller, action, args);
         return request;
     }
 

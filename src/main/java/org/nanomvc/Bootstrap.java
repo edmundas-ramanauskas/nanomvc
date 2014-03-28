@@ -136,8 +136,7 @@ public class Bootstrap extends HttpServlet
         String controllerMethodName = null;
 
         RequestHandler handler = new RequestHandler(path, this.routerClass);
-        Request req = handler.parseRequest();
-        req.setDefaultController(defaultController);
+        Request req = handler.parseRequest(defaultController);
         
         parseMultipartData(request);
 

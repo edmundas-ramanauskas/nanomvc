@@ -11,16 +11,15 @@ public class Request
     private String controller;
     private String action;
     private List<String> arguments;
-    private String defaultController;
 
     public Request()
     {
     }
 
-    public Request(String controller, String action, List<String> arguments)
+    public Request(String defaultController, String controller, String action, List<String> arguments)
     {
-        this.controller = controller;
-        this.action = action;
+        this.controller = (controller != null ? controller : defaultController);
+        this.action = (action == null ? DefaultAction : action);
         this.arguments = arguments;
     }
 
@@ -28,44 +27,20 @@ public class Request
         return controller;
     }
 
-    public void setController(String controller) {
-        this.controller = controller;
-    }
-
     public String getAction() {
         return action;
-    }
-
-    public void setAction(String action) {
-        this.action = action;
     }
 
     public List<String> getArguments() {
         return arguments;
     }
 
-    public void setArguments(List<String> arguments) {
-        this.arguments = arguments;
-    }
-
-    public String getDefaultController() {
-        return defaultController;
-    }
-
-    public void setDefaultController(String defaultController) {
-        this.defaultController = defaultController;
-    }
-
     public String getControllerClassName() {
-        if (controller == null) {
-            controller = defaultController.toLowerCase();
-        }
         return controller.substring(0, 1).toUpperCase() 
                 + controller.substring(1).toLowerCase();
     }
 
     public String getControllerMethodName() {
-        action = (action == null ? DefaultAction : action);
         return action;
     }
 }

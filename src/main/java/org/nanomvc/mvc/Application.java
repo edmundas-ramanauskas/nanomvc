@@ -37,16 +37,8 @@ public class Application {
         return this.baseUrl;
     }
 
-    public void setBaseUrl(String baseUrl) {
-        this.baseUrl = baseUrl;
-    }
-
     public String getCurrentUrl() {
         return this.currentUrl;
-    }
-
-    public void setCurrentUrl(String currentUrl) {
-        this.currentUrl = currentUrl;
     }
 
     public String createUrl(String urlPart) {
@@ -130,7 +122,7 @@ public class Application {
     
     public String pagination(Long pagesTotal, Integer currentPage, String pageLink) {
 	if(pagesTotal > 1000000)
-            return "You probably shouldn't do that.";
+            return "You're crazy!";
 	
 	StringBuilder sb = new StringBuilder();
 	
