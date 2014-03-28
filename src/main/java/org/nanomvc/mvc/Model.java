@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -15,8 +14,8 @@ import org.slf4j.LoggerFactory;
 
 public class Model {
 
-    private static Logger _log = LoggerFactory.getLogger(Model.class);
-    private static Boolean cachable = true;
+    private static final Logger _log = LoggerFactory.getLogger(Model.class);
+    private static final Boolean cachable = true;
     private Session session;
     private Order order = Order.asc("id");
     public static final int ASC = 0;
@@ -26,7 +25,7 @@ public class Model {
     private Map<String, String> alias;
     private Integer limit;
     private Integer offset;
-    private Class modelClass;
+    private final Class modelClass;
 
     public Model(Class modelClass) {
         this.modelClass = modelClass;
@@ -83,11 +82,11 @@ public class Model {
     }
 
     public void addCriteria(String key, Object value) {
-        addCriteria(key, value, Boolean.valueOf(true));
+        addCriteria(key, value, true);
     }
 
     public void addCriteria(String key, Object value, Boolean eq) {
-        if (eq.booleanValue()) {
+        if (eq) {
             if (criteriaEQ == null) {
                 criteriaEQ = new HashMap();
             }
@@ -108,11 +107,11 @@ public class Model {
     }
 
     public Model criteria(String key, Object value) {
-        return criteria(key, value, Boolean.valueOf(true));
+        return criteria(key, value, true);
     }
 
     public Model criteria(String key, Object value, Boolean eq) {
-        if (eq.booleanValue()) {
+        if (eq) {
             if (criteriaEQ == null) {
                 criteriaEQ = new HashMap();
             }
@@ -151,7 +150,8 @@ public class Model {
     }
     
     public Object findOne(String name, Object value) {
-        Object result = createCriteria().add(Restrictions.eq(name, value)).uniqueResult();
+        Object result = createCriteria().add(Restrictions.eq(name, value))
+                .uniqueResult();
         
         session.close();
         return result;
@@ -238,7 +238,8 @@ public class Model {
     }
 
     public Long countAll() {
-        Long count = (Long) createCriteria().setProjection(Projections.rowCount()).uniqueResult();
+        Long count = (Long) createCriteria().setProjection(Projections.rowCount())
+                .uniqueResult();
         session.close();
         return count;
     }
@@ -263,7 +264,8 @@ public class Model {
 
     private Criteria createCriteria() {
         session = HibernateUtil.getSession();
-        Criteria criteria = session.createCriteria(modelClass).setCacheable(cachable);
+        Criteria criteria = session.createCriteria(modelClass)
+                .setCacheable(cachable);
         if (limit != null) {
             criteria.setMaxResults(limit);
         }

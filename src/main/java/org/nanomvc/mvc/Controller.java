@@ -1,7 +1,6 @@
 package org.nanomvc.mvc;
 
 import com.google.gson.Gson;
-import org.nanomvc.Application;
 import org.nanomvc.http.LocalFile;
 import org.nanomvc.utils.RequestUtil;
 import java.io.IOException;
@@ -46,11 +45,21 @@ public abstract class Controller
     private Map<String, Object> params;
     private Map<String, Object> global;
     private Application app;
+    
     protected static final int IMG_CROP = 1;
     protected static final int IMG_RESIZE = 2;
     protected static final int IMG_RESIZE_CROP = 3;
+    
+    public static final String PATH_PUBLIC_UPL = "/public/upl/";
+    public static final String PATH_IMAGES = "/images";
+    public static final String SLASH = "/";
+    public static final String EMPTY = "";
+    
+    private static final String XML_HTTP_REQUEST = "xmlhttprequest";
 
-    public final void config(HttpServletRequest request, HttpServletResponse response, ServletContext context, String viewsPath, String controller, String action, Router router, Map files, Map fields) {
+    public final void config(HttpServletRequest request, HttpServletResponse response, 
+            ServletContext context, String viewsPath, String controller, 
+            String action, Router router, Map files, Map fields) {
         this.request = request;
         this.response = response;
         this.context = context;
@@ -60,12 +69,14 @@ public abstract class Controller
 
         this.router = router;
 
-        this.viewsPath = (viewsPath.endsWith("/") ? viewsPath : new StringBuilder().append(viewsPath).append("/").toString());
+        this.viewsPath = (viewsPath.endsWith(SLASH) ? viewsPath : 
+                new StringBuilder().append(viewsPath).append(SLASH).toString());
         this.controller = controller;
         this.action = action;
         this.template = action;
 
-        this.app = new Application(controller, action, getBaseUrl(), getCurrentUrl(), router, request.getSession());
+        this.app = new Application(controller, action, getBaseUrl(), 
+                getCurrentUrl(), router, request.getSession());
         
         this.params = new HashMap();
         this.global = new HashMap();
@@ -75,7 +86,7 @@ public abstract class Controller
     }
 
     protected String getPath() {
-        return context.getRealPath("/");
+        return context.getRealPath(SLASH);
     }
 
     public void thumb(String image, String path, int width, int height, int method) {
@@ -87,46 +98,51 @@ public abstract class Controller
     }
 
     protected final String saveImageFromUrl(String url, String filename) {
-        return saveImageFromUrl(url, filename, "");
+        return saveImageFromUrl(url, filename, EMPTY);
     }
 
     protected final String saveImageFromUrl(String url, String filename, String path) {
         try {
             if (path == null) {
                 path = "";
-            } else if ((!path.equals("")) && (!path.startsWith("/"))) {
-                path = new StringBuilder().append("/").append(path).toString();
+            } else if ((!path.equals(EMPTY)) && (!path.startsWith(SLASH))) {
+                path = new StringBuilder().append(SLASH).append(path).toString();
             }
-            return RequestUtil.saveImage(url, new StringBuilder().append(getPath()).append("/public/upl/").append(this.controller).append("/images").append(path).toString(), filename);
+            return RequestUtil.saveImage(url, new StringBuilder().append(getPath())
+                    .append(PATH_PUBLIC_UPL).append(this.controller)
+                    .append(PATH_IMAGES).append(path).toString(), filename);
         } catch (IOException ex) {
         }
         return null;
     }
 
     protected final String getImagesPath() {
-        return getImagesPath("");
+        return getImagesPath(EMPTY);
     }
 
     protected final String getImagesPath(String path) {
         if (path == null) {
-            path = "";
-        } else if ((path != null) && (!path.equals("")) && (!path.startsWith("/"))) {
-            path = new StringBuilder().append("/").append(path).toString();
+            path = EMPTY;
+        } else if ((path != null) && (!path.equals(EMPTY)) && (!path.startsWith(SLASH))) {
+            path = new StringBuilder().append(SLASH).append(path).toString();
         }
-        return new StringBuilder().append(getPath()).append("/public/upl/").append(this.controller).append("/images").append(path).toString();
+        return new StringBuilder().append(getPath()).append(PATH_PUBLIC_UPL)
+                .append(this.controller).append(PATH_IMAGES).append(path).toString();
     }
 
     protected final String getImagePath(String filename) {
-        return getImagePath(filename, "");
+        return getImagePath(filename, EMPTY);
     }
 
     protected final String getImagePath(String filename, String path) {
         if (path == null) {
-            path = "";
-        } else if ((path != null) && (!path.equals("")) && (!path.startsWith("/"))) {
-            path = new StringBuilder().append("/").append(path).toString();
+            path = EMPTY;
+        } else if ((path != null) && (!path.equals(EMPTY)) && (!path.startsWith(SLASH))) {
+            path = new StringBuilder().append(SLASH).append(path).toString();
         }
-        return new StringBuilder().append(getPath()).append("/public/upl/").append(this.controller).append("/images").append(path).append("/").append(filename).toString();
+        return new StringBuilder().append(getPath()).append(PATH_PUBLIC_UPL)
+                .append(this.controller).append(PATH_IMAGES).append(path)
+                .append(SLASH).append(filename).toString();
     }
 
     protected final String getImageUrl(String filename) {
@@ -135,12 +151,12 @@ public abstract class Controller
 
     protected final String getImageUrl(String filename, String path) {
         if (path == null) {
-            path = "";
-        } else if ((path != null) && (!path.equals("")) && (!path.startsWith("/"))) {
-            path = new StringBuilder().append("/").append(path).toString();
+            path = EMPTY;
+        } else if ((path != null) && (!path.equals(EMPTY)) && (!path.startsWith(SLASH))) {
+            path = new StringBuilder().append(SLASH).append(path).toString();
         }
-        return new StringBuilder().append("/public/upl/").append(controller)
-                .append("/images").append(path).append("/").append(filename)
+        return new StringBuilder().append(PATH_PUBLIC_UPL).append(controller)
+                .append(PATH_IMAGES).append(path).append(SLASH).append(filename)
                 .toString();
     }
 
@@ -152,21 +168,26 @@ public abstract class Controller
         return handleFileUpload(fieldName, null, fileName);
     }
 
-    protected final LocalFile handleFileUpload(String fieldName, String pathName, String fileName) {
+    protected final LocalFile handleFileUpload(String fieldName, String pathName, 
+            String fileName) {
         try {
             if (pathName == null) {
-                pathName = "";
+                pathName = EMPTY;
             }
-            if (!pathName.equals("")) {
-                pathName = pathName.startsWith("/") ? pathName : new StringBuilder().append("/").append(pathName).toString();
-                pathName = pathName.endsWith("/") ? pathName : new StringBuilder().append(pathName).append("/").toString();
+            if (!pathName.equals(EMPTY)) {
+                pathName = pathName.startsWith(SLASH) ? pathName : 
+                        new StringBuilder().append(SLASH).append(pathName).toString();
+                pathName = pathName.endsWith(SLASH) ? pathName : 
+                        new StringBuilder().append(pathName).append(SLASH).toString();
             } else {
-                pathName = "/";
+                pathName = SLASH;
             }
             pathName = new StringBuilder().append(pathName).append(getLocalDate()).toString();
 
             InputStream is = getFile(fieldName);
-            String path = new StringBuilder().append("/public/upl/").append(this.controller).append("/images").append(pathName).toString();
+            String path = new StringBuilder().append(PATH_PUBLIC_UPL)
+                    .append(this.controller).append(PATH_IMAGES)
+                    .append(pathName).toString();
             String file = RequestUtil.saveImage(is, this.context.getRealPath(path), fileName);
             if (file != null) {
                 return new LocalFile(path, pathName, file);
@@ -181,28 +202,35 @@ public abstract class Controller
         return handleMultipleFilesUpload(fieldName, null, null);
     }
 
-    protected final List<LocalFile> handleMultipleFilesUpload(String fieldName, String fileName) {
+    protected final List<LocalFile> handleMultipleFilesUpload(String fieldName, 
+            String fileName) {
         return handleMultipleFilesUpload(fieldName, null, fileName);
     }
 
-    protected final List<LocalFile> handleMultipleFilesUpload(String fieldName, String pathName, String fileName) {
+    protected final List<LocalFile> handleMultipleFilesUpload(String fieldName, 
+            String pathName, String fileName) {
         try {
             if (pathName == null) {
-                pathName = "";
+                pathName = EMPTY;
             }
-            if (!pathName.equals("")) {
-                pathName = pathName.startsWith("/") ? pathName : new StringBuilder().append("/").append(pathName).toString();
-                pathName = pathName.endsWith("/") ? pathName : new StringBuilder().append(pathName).append("/").toString();
+            if (!pathName.equals(EMPTY)) {
+                pathName = pathName.startsWith(SLASH) ? pathName : 
+                        new StringBuilder().append(SLASH).append(pathName).toString();
+                pathName = pathName.endsWith(SLASH) ? pathName : 
+                        new StringBuilder().append(pathName).append(SLASH).toString();
             } else {
-                pathName = "/";
+                pathName = SLASH;
             }
-            pathName = new StringBuilder().append(pathName).append(getLocalDate()).toString();
+            pathName = new StringBuilder().append(pathName).append(getLocalDate())
+                    .toString();
 
             List<InputStream> streamList = getFiles(fieldName);
             if (streamList == null) {
                 return null;
             }
-            String path = new StringBuilder().append("/public/upl/").append(this.controller).append("/images").append(pathName).toString();
+            String path = new StringBuilder().append(PATH_PUBLIC_UPL)
+                    .append(this.controller).append(PATH_IMAGES).append(pathName)
+                    .toString();
             List files = new ArrayList();
 
             Integer i = 0;
@@ -348,23 +376,33 @@ public abstract class Controller
 
     protected final String getBaseUrl() {
         if ((this.request.getServerPort() == 80) || (this.request.getServerPort() == 443)) {
-            return new StringBuilder().append(this.request.getScheme()).append("://").append(this.request.getServerName()).append(this.request.getContextPath()).toString();
+            return new StringBuilder().append(this.request.getScheme())
+                    .append("://").append(this.request.getServerName())
+                    .append(this.request.getContextPath()).toString();
         }
 
-        return new StringBuilder().append(this.request.getScheme()).append("://").append(this.request.getServerName()).append(":").append(this.request.getServerPort()).append(this.request.getContextPath()).toString();
+        return new StringBuilder().append(this.request.getScheme())
+                .append("://").append(this.request.getServerName())
+                .append(":").append(this.request.getServerPort())
+                .append(this.request.getContextPath()).toString();
     }
 
     protected final String getCurrentUrl() {
-        String requestUri = this.request.getRequestURI() != null ? this.request.getRequestURI() : "";
+        String requestUri = this.request.getRequestURI() != null ? 
+                this.request.getRequestURI() : EMPTY;
         if ((this.request.getServerPort() == 80) || (this.request.getServerPort() == 443)) {
-            return new StringBuilder().append(this.request.getScheme()).append("://").append(this.request.getServerName()).append(requestUri).toString();
+            return new StringBuilder().append(this.request.getScheme()).append("://")
+                    .append(this.request.getServerName()).append(requestUri).toString();
         }
 
-        return new StringBuilder().append(this.request.getScheme()).append("://").append(this.request.getServerName()).append(":").append(this.request.getServerPort()).append(requestUri).toString();
+        return new StringBuilder().append(this.request.getScheme()).append("://")
+                .append(this.request.getServerName()).append(":")
+                .append(this.request.getServerPort()).append(requestUri).toString();
     }
 
     protected final String getCurrentUrlFull() {
-        String queryString = this.request.getQueryString() != null ? this.request.getQueryString() : "";
+        String queryString = this.request.getQueryString() != null ? 
+                this.request.getQueryString() : EMPTY;
         return new StringBuilder().append(getUrlPath()).append(queryString).toString();
     }
     
@@ -373,22 +411,29 @@ public abstract class Controller
     }
 
     protected final String createUrl(String controller, String action, Object... params) {
-        String route = new StringBuilder().append(controller.substring(0, 1).toUpperCase()).append(controller.substring(1).toLowerCase()).append(".").append(action.toLowerCase()).toString();
+        String route = new StringBuilder().append(controller.substring(0, 1)
+                .toUpperCase()).append(controller.substring(1).toLowerCase())
+                .append(".").append(action.toLowerCase()).toString();
 
-        String url = new StringBuilder().append("/").append(controller).append("/").append(action).toString();
+        String url = new StringBuilder().append(SLASH).append(controller)
+                .append(SLASH).append(action).toString();
         if (this.router.reverseRoutes().containsKey(route)) {
             url = (String) this.router.reverseRoutes().get(route);
         }
-        return new StringBuilder().append(getBaseUrl()).append(url).append(params != null ? new StringBuilder().append("/").append(StringUtils.join(params, "/")).toString() : "").toString();
+        return new StringBuilder().append(getBaseUrl()).append(url)
+                .append(params != null ? new StringBuilder().append(SLASH)
+                        .append(StringUtils.join(params, SLASH))
+                        .toString() : EMPTY).toString();
     }
 
     protected final Boolean isAjax() {
         String xReq = request.getHeader("X-Requested-With");
-        return Boolean.valueOf((xReq != null) && (xReq.toLowerCase().startsWith("xmlhttprequest")));
+        return Boolean.valueOf((xReq != null)
+                && (xReq.toLowerCase().startsWith(XML_HTTP_REQUEST)));
     }
 
     protected final Boolean isEmpty(String value) {
-        return Boolean.valueOf((value == null) || (value.equals("")));
+        return Boolean.valueOf((value == null) || (value.equals(EMPTY)));
     }
     
     protected final void parseData(Object bean) {
@@ -406,10 +451,10 @@ public abstract class Controller
     }
     
     private String getTemplate() {
-        String template = (this.template.indexOf('/') > 0) ? this.template : 
-                new StringBuilder().append(controller).append("/")
+        String template = (this.template.indexOf(SLASH) > 0) ? this.template : 
+                new StringBuilder().append(controller).append(SLASH)
                 .append(this.template).toString();
-        return template + (!this.template.endsWith(".htm") ? ".htm" : "");
+        return template + (!this.template.endsWith(".htm") ? ".htm" : EMPTY);
     }
     
     private String getTemplate(String template) {
@@ -417,7 +462,7 @@ public abstract class Controller
         return getTemplate();
     }
     
-    public Result status(int statusCode) {
+    protected Result status(int statusCode) {
         params.put("APP", app);
         global.put("APP", app);
         params.put("app", app);
@@ -430,55 +475,55 @@ public abstract class Controller
         return result;
     }
     
-    public Result redirect(String url) {
+    protected Result redirect(String url) {
         return status(Result.SC_303_SEE_OTHER).link(url);
     }
     
-    public Result ok() {
+    protected Result ok() {
         return status(Result.SC_200_OK);
     }
 
-    public Result notFound() {
+    protected Result notFound() {
         return status(Result.SC_404_NOT_FOUND);
     }
 
-    public Result forbidden() {
+    protected Result forbidden() {
         return status(Result.SC_403_FORBIDDEN);
     }
 
-    public Result badRequest() {
+    protected Result badRequest() {
         return status(Result.SC_400_BAD_REQUEST);
     }
 
-    public Result internalServerError() {
+    protected Result internalServerError() {
         return status(Result.SC_500_INTERNAL_SERVER_ERROR);
     }
     
-    public Result text() {
+    protected Result text() {
         return status(Result.SC_200_OK).renderable(false).text();
     }
     
-    public Result text(Object content) {
+    protected Result text(Object content) {
         return text().content(content.toString());
     }
     
-    public Result html() {
+    protected Result html() {
         return status(Result.SC_200_OK).html();
     }
     
-    public Result html(String template) {
+    protected Result html(String template) {
         return html().template(getTemplate(template));
     }
 
-    public Result json() {
+    protected Result json() {
         return status(Result.SC_200_OK).renderable(false).json();
     }
 
-    public Result json(Object content) {
+    protected Result json(Object content) {
         return json().content(toJson(content));
     }
 
-    public Result xml() {       
+    protected Result xml() {       
         return status(Result.SC_200_OK).xml();
     }
     

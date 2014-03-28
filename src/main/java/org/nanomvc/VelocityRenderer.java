@@ -1,14 +1,5 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package org.nanomvc;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Map;
 import java.util.Properties;
@@ -27,15 +18,27 @@ import org.slf4j.LoggerFactory;
  */
 public class VelocityRenderer implements Renderer
 {
-    private static Logger _log = LoggerFactory.getLogger(VelocityRenderer.class);
+    private static final Logger _log = LoggerFactory.getLogger(VelocityRenderer.class);
+    
+    private static final String KEY_CONTENT = "content";
+    private static final String KEY_PRIVATE = "private";
+    private static final String KEY_PUBLIC = "public";
+    private static final String KEY_ESC = "esc";
+    private static final String ENCODING = "UTF-8";
     
     private static VelocityEngine veloEngine;
     
+    private final org.apache.velocity.tools.generic.EscapeTool escTool;
     private ServletContext context;
     private String viewsPath;
     private String template;
     private Map<String, Map<String, Object>> params;
     
+    public VelocityRenderer() {
+        escTool = new org.apache.velocity.tools.generic.EscapeTool();
+    }
+    
+    @Override
     public void configure(ServletContext context, String viewsPath, Map<String, Map<String, Object>> params) {
         this.context = context;
         this.viewsPath = viewsPath;
@@ -56,19 +59,19 @@ public class VelocityRenderer implements Renderer
         } catch (ResourceNotFoundException | ParseErrorException  ex) {
             _log.error(ex.toString());
         } catch(Exception ex) {
-            
+            // ignore
         }
         try {
             StringWriter sw = new StringWriter();
 
             context = new VelocityContext();
-            context.put("esc", new org.apache.velocity.tools.generic.EscapeTool());
-            if (params.get("public") != null) {
-                for (Map.Entry entry : params.get("public").entrySet()) {
+            context.put(KEY_ESC, escTool);
+            if (params.get(KEY_PUBLIC) != null) {
+                for (Map.Entry entry : params.get(KEY_PUBLIC).entrySet()) {
                     context.put((String) entry.getKey(), entry.getValue());
                 }
             }
-            context.put("content", fetch(template, params.get("private")));
+            context.put(KEY_CONTENT, fetch(template, params.get(KEY_PRIVATE)));
 
             if (tpl != null) {
                 tpl.merge(context, sw);
@@ -87,7 +90,7 @@ public class VelocityRenderer implements Renderer
     
     @Override
     public String fetch(String view) {
-        return fetch(view, params.get("private"));
+        return fetch(view, params.get(KEY_PRIVATE));
     }
 
     @Override
@@ -98,10 +101,8 @@ public class VelocityRenderer implements Renderer
         VelocityContext context = new VelocityContext();
 
         view = new StringBuilder().append(view).append(!view.endsWith(".htm") ? ".htm" : "").toString();
-
-        org.apache.velocity.tools.generic.EscapeTool esc = new org.apache.velocity.tools.generic.EscapeTool();
         
-        context.put("esc", new org.apache.velocity.tools.generic.EscapeTool());
+        context.put(KEY_ESC, escTool);
         if (params != null) {
             for (Map.Entry entry : params.entrySet()) {
                 context.put((String) entry.getKey(), entry.getValue());
@@ -110,7 +111,7 @@ public class VelocityRenderer implements Renderer
         try {
             StringWriter sw = new StringWriter();
 
-            engine.mergeTemplate(view, "UTF-8", context, sw);
+            engine.mergeTemplate(view, ENCODING, context, sw);
 
             result = sw.toString();
 
@@ -126,7 +127,7 @@ public class VelocityRenderer implements Renderer
         if (veloEngine == null) {
             try {
                 Properties properties = new Properties();
-                properties.setProperty("input.encoding", "UTF-8");
+                properties.setProperty("input.encoding", ENCODING);
                 properties.setProperty("resource.loader", "webapp");
                 properties.setProperty("webapp.resource.loader.class", "org.apache.velocity.tools.view.WebappResourceLoader");
                 properties.setProperty("webapp.resource.loader.path", viewsPath);

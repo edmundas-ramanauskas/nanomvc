@@ -8,8 +8,6 @@ package org.nanomvc.mvc;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.nanomvc.Renderer;
-import org.nanomvc.VelocityRenderer;
 
 /**
  *

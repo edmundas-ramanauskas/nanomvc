@@ -6,75 +6,66 @@ import java.util.List;
 public class Request
   implements Serializable
 {
-  private static final String ControllerSuffix = "Controller";
-  private static final String ActionPrefix = "do";
-  private static final String DefaultAction = "index";
-  private String controller;
-  private String action;
-  private List<String> arguments;
-  private String defaultController;
+    private static final String ControllerSuffix = "Controller";
+    private static final String DefaultAction = "index";
+    private String controller;
+    private String action;
+    private List<String> arguments;
+    private String defaultController;
 
-  public Request()
-  {
-  }
-
-  public Request(String controller, String action, List<String> arguments)
-  {
-    this.controller = controller;
-    this.action = action;
-    this.arguments = arguments;
-  }
-
-  public String getController() {
-    return this.controller;
-  }
-
-  public void setController(String controller) {
-    this.controller = controller;
-  }
-
-  public String getAction() {
-    return this.action;
-  }
-
-  public void setAction(String action) {
-    this.action = action;
-  }
-
-  public List<String> getArguments() {
-    return this.arguments;
-  }
-
-  public void setArguments(List<String> arguments) {
-    this.arguments = arguments;
-  }
-
-  public String getDefaultController() {
-    return this.defaultController;
-  }
-
-  public void setDefaultController(String defaultController) {
-    this.defaultController = defaultController;
-  }
-
-  public String getControllerClassName() {
-    String controllerName = null;
-    if (this.controller != null) {
-      controllerName = this.controller.substring(0, 1).toUpperCase() + this.controller.substring(1).toLowerCase() + "Controller";
-    } else {
-      this.defaultController = this.defaultController.toLowerCase();
-      if (this.defaultController.endsWith("Controller".toLowerCase()))
-        this.controller = this.defaultController.substring(0, this.defaultController.lastIndexOf("Controller".toLowerCase()));
-      else {
-        this.controller = this.defaultController;
-      }
-      controllerName = this.controller.substring(0, 1).toUpperCase() + this.controller.substring(1).toLowerCase() + "Controller";
+    public Request()
+    {
     }
-    return controllerName;
-  }
 
-  public String getControllerMethodName() {
-    this.action = (this.action == null ? "index" : this.action);
-    return this.action;
-  }
+    public Request(String controller, String action, List<String> arguments)
+    {
+        this.controller = controller;
+        this.action = action;
+        this.arguments = arguments;
+    }
+
+    public String getController() {
+        return controller;
+    }
+
+    public void setController(String controller) {
+        this.controller = controller;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public void setAction(String action) {
+        this.action = action;
+    }
+
+    public List<String> getArguments() {
+        return arguments;
+    }
+
+    public void setArguments(List<String> arguments) {
+        this.arguments = arguments;
+    }
+
+    public String getDefaultController() {
+        return defaultController;
+    }
+
+    public void setDefaultController(String defaultController) {
+        this.defaultController = defaultController;
+    }
+
+    public String getControllerClassName() {
+        if (controller == null) {
+            controller = defaultController.toLowerCase();
+        }
+        return controller.substring(0, 1).toUpperCase() 
+                + controller.substring(1).toLowerCase();
+    }
+
+    public String getControllerMethodName() {
+        action = (action == null ? DefaultAction : action);
+        return action;
+    }
 }

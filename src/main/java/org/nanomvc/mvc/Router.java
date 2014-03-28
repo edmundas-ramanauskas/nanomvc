@@ -2,7 +2,6 @@ package org.nanomvc.mvc;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 public abstract class Router {
 

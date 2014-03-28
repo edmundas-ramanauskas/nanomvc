@@ -19,8 +19,9 @@ public class DaemonThreadFactory
         this.factory = factory;
     }
 
+    @Override
     public Thread newThread(Runnable r) {
-        Thread t = this.factory.newThread(r);
+        Thread t = factory.newThread(r);
         t.setDaemon(true);
         return t;
     }

@@ -15,6 +15,7 @@ public class RequestHandler {
     
     private static Logger _log = LoggerFactory.getLogger(RequestHandler.class);
 
+    private static final String SLASH = "/";
     private static final String RoutesMethod = "routes";
     private String path;
     private String router;
@@ -24,7 +25,7 @@ public class RequestHandler {
     }
 
     public RequestHandler(String path, String router) {
-        this.path = (path == null) ? "/" : path;
+        this.path = (path == null) ? SLASH : path;
         this.router = router;
     }
 
@@ -34,16 +35,17 @@ public class RequestHandler {
         String controller = null;
         String action = null;
         List args = null;
-        if ((this.path.endsWith("/")) && (!this.path.equals("/"))) {
-            this.path = this.path.substring(0, this.path.length() - 1);
+        if ((path.endsWith(SLASH)) && (!path.equals(SLASH))) {
+            path = path.substring(0, path.length() - 1);
         }
         try {
-            if (this.router != null) {
+            if (router != null) {
                 ClassLoader classLoader = getClass().getClassLoader();
-                Class rClass = classLoader.loadClass(this.router);
-                this.routerObject = ((Router) rClass.getConstructor(new Class[0]).newInstance(new Object[0]));
-                Method method = rClass.getMethod("routes", new Class[0]);
-                routes = (Map) method.invoke(this.routerObject, new Object[0]);
+                Class rClass = classLoader.loadClass(router);
+                routerObject = ((Router) rClass.getConstructor(new Class[0])
+                        .newInstance(new Object[0]));
+                Method method = rClass.getMethod(RoutesMethod, new Class[0]);
+                routes = (Map) method.invoke(routerObject, new Object[0]);
             }
         } catch (Throwable t) {
             
@@ -51,21 +53,23 @@ public class RequestHandler {
         Boolean parse = true;
         if (routes != null) {
             String route = null;
-            if (this.path.equals("/")) {
-                route = this.path;
-            } else if (routes.containsKey(this.path)) {
-                route = this.path;
+            if (path.equals(SLASH)) {
+                route = path;
+            } else if (routes.containsKey(path)) {
+                route = path;
             } else {
-                List parts = Arrays.asList(this.path.split("/"));
+                List parts = Arrays.asList(path.split(SLASH));
                 parts = parts.subList(1, parts.size());
                 for (int i = 0; i < parts.size(); i++) {
-                    String tempRoute = "/" + StringUtils.join(parts.subList(0, parts.size() - i), "/");
+                    String tempRoute = SLASH 
+                            + StringUtils.join(parts.subList(0, parts.size() - i)
+                                    , SLASH);
                     if (routes.containsKey(tempRoute)) {
                         route = tempRoute;
                         try {
                             args = parts.subList(parts.size() - i, parts.size());
                         } catch (Exception e) {
-                            System.out.println(e.toString());
+//                            System.out.println(e.toString());
                         }
                         break;
                     }
@@ -83,8 +87,8 @@ public class RequestHandler {
                 }
             }
         }
-        if ((parse) && (!this.path.equals("/"))) {
-            List parts = Arrays.asList(this.path.split("/"));
+        if ((parse) && (!path.equals(SLASH))) {
+            List parts = Arrays.asList(path.split(SLASH));
             parts = parts.subList(1, parts.size());
             controller = (String) parts.get(0);
             switch (parts.size()) {
@@ -105,6 +109,6 @@ public class RequestHandler {
     }
 
     public Router getRouter() {
-        return this.routerObject;
+        return routerObject;
     }
 }

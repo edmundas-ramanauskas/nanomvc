@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.lang.annotation.Annotation;
+//import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -19,8 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-import java.util.logging.Level;
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -143,7 +141,8 @@ public class Bootstrap extends HttpServlet
         
         parseMultipartData(request);
 
-        controllerClassName = new StringBuilder().append(controllersPath).append(".").append(req.getControllerClassName()).toString();
+        controllerClassName = new StringBuilder().append(controllersPath).append(".")
+                .append(req.getControllerClassName()).toString();
         controllerMethodName = req.getControllerMethodName();
         List args = req.getArguments();
         try {
@@ -168,10 +167,10 @@ public class Bootstrap extends HttpServlet
                     if (m.getName().equalsIgnoreCase(controllerMethodName)) {
                         params = m.getParameterTypes();
                         method = cc.getDeclaredMethod(m.getName(), params);
+                        controllerMethodName = method.getName();
                         break;
                     }
                 }
-                controllerMethodName = method.getName();
 
                 if (method == null) {
                     throw new NoSuchMethodException();

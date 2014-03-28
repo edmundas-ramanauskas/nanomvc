@@ -86,7 +86,7 @@ public final class RequestUtil {
         }
         byte[] data = IOUtils.toByteArray(is);
         String format = getImageFormat(getMimeType(data));
-        if (!isWithImageExt(file).booleanValue()) {
+        if (!isWithImageExt(file)) {
             file = file + "." + format.toLowerCase();
         }
         BufferedImage image = ImageIO.read(new ByteArrayInputStream(data));
@@ -98,7 +98,7 @@ public final class RequestUtil {
     }
 
     private static Boolean isWithImageExt(String file) {
-        return Boolean.valueOf((file.endsWith(".jpg")) || (file.endsWith(".png")) || (file.endsWith(".gif")) || (file.endsWith(".bmp")));
+        return (file.endsWith(".jpg") || file.endsWith(".png") || file.endsWith(".gif") || file.endsWith(".bmp"));
     }
 
     public static String saveImage(String url, String path, String file) throws IOException, NullPointerException {
@@ -109,7 +109,7 @@ public final class RequestUtil {
         return getData(getInputStream(url));
     }
 
-    public static String httpRequest(String method, String url, Map<String, Object> params) throws IOException {
+    public static String httpRequest(String url, String method, Map<String, Object> params) throws IOException {
         return getData(getInputStream(url, method, params));
     }
 
@@ -163,7 +163,6 @@ public final class RequestUtil {
 
     public static String getData(String url) throws IOException {
         URL requestUrl = new URL(url);
-
         URLConnection conn = requestUrl.openConnection();
         conn.setConnectTimeout(10000);
         conn.setReadTimeout(10000);
@@ -176,25 +175,25 @@ public final class RequestUtil {
     
     public static void saveRemoteDataToFile(String remoteFile, String localFile) {
         try {
-		URL url = new URL(remoteFile);
-		InputStream is = url.openStream();
-		ByteArrayOutputStream os = new ByteArrayOutputStream();			
-		byte[] buf = new byte[4096];
-		int n;			
-		while ((n = is.read(buf)) >= 0)
-                    os.write(buf, 0, n);
-		os.close();
-		is.close();			
-		byte[] data = os.toByteArray();
-                
-                FileOutputStream out = new FileOutputStream(localFile);
-                out.write(data);
-                out.flush();
-                out.close();
+            URL url = new URL(remoteFile);
+            InputStream is = url.openStream();
+            ByteArrayOutputStream os = new ByteArrayOutputStream();			
+            byte[] buf = new byte[4096];
+            int n;			
+            while ((n = is.read(buf)) >= 0)
+                os.write(buf, 0, n);
+            os.close();
+            is.close();			
+            byte[] data = os.toByteArray();
+
+            FileOutputStream out = new FileOutputStream(localFile);
+            out.write(data);
+            out.flush();
+            out.close();
 	} catch (MalformedURLException e) {
-		e.printStackTrace();
+            e.printStackTrace();
 	} catch (IOException e) {
-		e.printStackTrace();
+            e.printStackTrace();
 	}
     }
 }
