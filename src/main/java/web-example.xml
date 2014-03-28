@@ -2,7 +2,7 @@
 <web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
     <filter>
         <filter-name>EncodingFilter</filter-name>
-        <filter-class>com.nanomvc.EncodingFilter</filter-class>
+        <filter-class>org.nanomvc.EncodingFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>EncodingFilter</filter-name>
@@ -10,7 +10,7 @@
     </filter-mapping>
     <servlet>
         <servlet-name>Bootstrap</servlet-name>
-        <servlet-class>com.nanomvc.Bootstrap</servlet-class>
+        <servlet-class>org.nanomvc.Bootstrap</servlet-class>
     <servlet-mapping>
         <servlet-name>default</servlet-name>
         <url-pattern>/public/*</url-pattern>
@@ -21,6 +21,6 @@
         <url-pattern>/</url-pattern>
     </servlet-mapping>
     <listener>
-        <listener-class>com.nanomvc.ExecutorContextListener</listener-class>
+        <listener-class>org.nanomvc.ExecutorContextListener</listener-class>
     </listener>
 </web-app>
