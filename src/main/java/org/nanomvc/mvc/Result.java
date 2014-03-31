@@ -32,12 +32,12 @@ public class Result
     public static int SC_500_INTERNAL_SERVER_ERROR = 500;
     public static int SC_501_NOT_IMPLEMENTED = 501;
     
-    public static final String TEXT_HTML = "text/html";
-    public static final String TEXT_PLAIN = "text/plain";
-    public static final String APPLICATON_JSON = "application/json";
-    public static final String APPLICATON_JSONP = "application/javascript";
-    public static final String APPLICATION_XML = "application/xml";
-    public static final String APPLICATION_OCTET_STREAM = "application/octet-stream";
+    public static final String CT_TEXT_HTML = "text/html";
+    public static final String CT_TEXT_PLAIN = "text/plain";
+    public static final String CT_APPLICATON_JSON = "application/json";
+    public static final String CT_APPLICATON_JSONP = "application/javascript";
+    public static final String CT_APPLICATION_XML = "application/xml";
+    public static final String CT_APPLICATION_OCTET_STREAM = "application/octet-stream";
     
     public static final String LOCATION = "Location";
     public static final String CACHE_CONTROL = "Cache-Control";
@@ -48,9 +48,9 @@ public class Result
     
     private boolean renderable = true;
     private boolean layoutEnabled = true;
-    private int statusCode;
+    private final int statusCode;
+    private final String charset;
     private String contentType;
-    private String charset;
     private Object content;
     private String template;
     private String link;
@@ -121,22 +121,22 @@ public class Result
     }
 
     public Result text() {
-        contentType = TEXT_PLAIN;
+        contentType = CT_TEXT_PLAIN;
         return this;
     }
 
     public Result html() {
-        contentType = TEXT_HTML;
+        contentType = CT_TEXT_HTML;
         return this;
     }
 
     public Result json() {
-        contentType = APPLICATON_JSON;
+        contentType = CT_APPLICATON_JSON;
         return this;
     }
 
     public Result xml() {
-        contentType = APPLICATION_XML;
+        contentType = CT_APPLICATION_XML;
         return this;
     }
     

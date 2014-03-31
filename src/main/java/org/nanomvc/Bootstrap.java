@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 //@MultipartConfig(location = "/tmp")
 public class Bootstrap extends HttpServlet
 {
-    private static Logger _log = LoggerFactory.getLogger(Bootstrap.class);
+    private static final Logger _log = LoggerFactory.getLogger(Bootstrap.class);
     
     private static final String ActionPrefix = "";
     private static final String InitMethod = "init";
@@ -47,7 +47,7 @@ public class Bootstrap extends HttpServlet
     protected Map<String, Object> files;
     protected Map<String, String> fields;
     
-    private String viewsPath = "/WEB-INF/views";
+    private final String viewsPath = "/WEB-INF/views";
     private String controllersPath;
     private String defaultController;
     private String routerClass;
@@ -59,7 +59,8 @@ public class Bootstrap extends HttpServlet
         super.init(config);
         
         try {
-            File file = new File(getServletContext().getRealPath("/WEB-INF/conf/hibernate.cfg.xml"));
+            File file = new File(getServletContext()
+                    .getRealPath("/WEB-INF/conf/hibernate.cfg.xml"));
             HibernateUtil.setConfigurationFile(file);
         } catch (Exception ex) {
             _log.warn("/WEB-INF/conf/hibernate.cfg.xml is missing");
@@ -67,7 +68,8 @@ public class Bootstrap extends HttpServlet
         
         Properties properties = new Properties();
         try {
-            properties.load(new FileInputStream(new File(getServletContext().getRealPath("/WEB-INF/configuration.properties"))));
+            properties.load(new FileInputStream(new File(getServletContext()
+                    .getRealPath("/WEB-INF/configuration.properties"))));
         } catch (IOException ex) {
             // ignore
         }
@@ -113,23 +115,25 @@ public class Bootstrap extends HttpServlet
                             this.fields.put(item.getFieldName(), item.getString("UTF-8"));
                         }
                     }
-                } catch (Throwable e) {
-                    _log.error("exception", e);
+                } catch (Exception e) {
+                    _log.error("Bootstrap.parseMultipartData", e);
                 }
             } else {
                 this.fields = null;
                 this.files = null;
             }
-        } catch (Throwable ex) {
-            _log.error("exception", ex);
+        } catch (Exception ex) {
+            _log.error("Bootstrap.parseMultipartData", ex);
         }
     }
 
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        BasicConfigurator.configure();
-        
+    protected void processRequest(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
         startTime = System.currentTimeMillis();
         output = null;
+        
+        BasicConfigurator.configure();
+        
         String path = request.getServletPath();
 
         String controllerClassName = null;
@@ -152,9 +156,15 @@ public class Bootstrap extends HttpServlet
             Object co = constructor.newInstance(new Object[0]);
             Method method = null;
             try {
-                method = cc.getMethod(ConfigMethod, new Class[]{HttpServletRequest.class, HttpServletResponse.class, ServletContext.class, String.class, String.class, String.class, Router.class, Map.class, Map.class});
+                method = cc.getMethod(ConfigMethod, 
+                    HttpServletRequest.class, HttpServletResponse.class, 
+                    ServletContext.class, String.class, String.class, 
+                    String.class, Router.class, Map.class, Map.class);
 
-                method.invoke(co, new Object[]{request, response, getServletContext(), this.viewsPath, req.getController(), req.getAction(), handler.getRouter(), this.files, this.fields});
+                method.invoke(co, 
+                    request, response, getServletContext(), this.viewsPath, 
+                    req.getController(), req.getAction(), handler.getRouter(), 
+                    this.files, this.fields);
 
                 method = cc.getMethod(InitMethod, new Class[0]);
                 method.invoke(co, new Object[0]);
@@ -260,7 +270,8 @@ public class Bootstrap extends HttpServlet
             } else {
                 error(ex.getCause(), request, response);
             }
-        } catch (ClassNotFoundException | IllegalArgumentException | IllegalAccessException | InstantiationException | SecurityException | NoSuchMethodException ex) {
+        } catch (ClassNotFoundException | IllegalArgumentException | IllegalAccessException 
+                | InstantiationException | SecurityException | NoSuchMethodException ex) {
             _log.error(new StringBuilder().append("Undefined controller: ").append(path).toString());
             _log.error(ex.toString());
             error(
@@ -282,7 +293,7 @@ public class Bootstrap extends HttpServlet
                 response.sendRedirect(result.getLink());
                 return;
             } catch (IOException ex) {
-                
+                throw new RuntimeException("Bootstrap.buildResponse", ex);
             }
         }
         if(result.isRenderable()) {
@@ -299,13 +310,13 @@ public class Bootstrap extends HttpServlet
 
     private void log(HttpServletRequest request) {
         try {
-            Long time = Long.valueOf(System.currentTimeMillis() - this.startTime);
+            Long time = System.currentTimeMillis() - this.startTime;
             String path = request.getServletPath();
             if (time > 100) {
 //                _log.info();
             }
         } catch (Exception e) {
-
+            // ignore
         }
     }
 
@@ -349,8 +360,8 @@ public class Bootstrap extends HttpServlet
             try {
                 response.getWriter().flush();
                 response.getWriter().close();
-            } catch(Exception e) {
-                _log.error(e.getMessage());
+            } catch(Exception ex) {
+                _log.error("Bootstrap.flush", ex);
             }
             return;
         }
@@ -358,8 +369,8 @@ public class Bootstrap extends HttpServlet
             response.getWriter().print(output.toString());
             response.getWriter().flush();
             response.getWriter().close();
-        } catch(Exception e) {
-            _log.error(e.getMessage());
+        } catch(Exception ex) {
+            _log.error("Bootstrap.flush", ex);
         }
     }
 

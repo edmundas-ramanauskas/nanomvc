@@ -25,6 +25,7 @@ public class VelocityRenderer implements Renderer
     private static final String KEY_PUBLIC = "public";
     private static final String KEY_ESC = "esc";
     private static final String ENCODING = "UTF-8";
+    private static final String CACHE_SIZE = "256";
     
     private static VelocityEngine veloEngine;
     
@@ -51,20 +52,20 @@ public class VelocityRenderer implements Renderer
         String result = null;
 
         VelocityEngine engine = getVeloEngine();
-        VelocityContext context = new VelocityContext();
 
         Template tpl = null;
         try {
             tpl = engine.getTemplate("layout/main.htm");
         } catch (ResourceNotFoundException | ParseErrorException  ex) {
-            _log.error(ex.toString());
+            _log.error("VelocityRenderer.render", ex);
+            throw new RuntimeException(ex);
         } catch(Exception ex) {
             // ignore
         }
         try {
             StringWriter sw = new StringWriter();
 
-            context = new VelocityContext();
+            VelocityContext context = new VelocityContext();
             context.put(KEY_ESC, escTool);
             if (params.get(KEY_PUBLIC) != null) {
                 for (Map.Entry entry : params.get(KEY_PUBLIC).entrySet()) {
@@ -81,7 +82,7 @@ public class VelocityRenderer implements Renderer
 
             sw.close();
         } catch (Exception ex) {
-            _log.error("Template render error", ex);
+            _log.error("VelocityRenderer.render", ex);
             throw new RuntimeException(ex);
         }
         
@@ -131,7 +132,7 @@ public class VelocityRenderer implements Renderer
                 properties.setProperty("resource.loader", "webapp");
                 properties.setProperty("webapp.resource.loader.class", "org.apache.velocity.tools.view.WebappResourceLoader");
                 properties.setProperty("webapp.resource.loader.path", viewsPath);
-                properties.setProperty("resource.manager.defaultcache.size", "256");
+                properties.setProperty("resource.manager.defaultcache.size", CACHE_SIZE);
                 properties.setProperty("webapp.resource.loader.cache", "false");
                 properties.setProperty("runtime.log.logsystem.class", "org.apache.velocity.runtime.log.NullLogSystem");
                 properties.setProperty("runtime.log.logsystem.log4j.logger", VelocityEngine.class.getName());

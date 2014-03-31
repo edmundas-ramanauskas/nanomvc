@@ -1,11 +1,10 @@
 package org.nanomvc.mvc;
 
 import com.google.gson.Gson;
-import org.nanomvc.http.LocalFile;
-import org.nanomvc.utils.RequestUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -23,13 +22,15 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.lang.StringUtils;
 import org.jsoup.Jsoup;
+import org.nanomvc.http.LocalFile;
 import org.nanomvc.utils.FileUtil;
+import org.nanomvc.utils.RequestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class Controller
 {
-    private static Logger _log = LoggerFactory.getLogger(Controller.class);
+    private static final Logger _log = LoggerFactory.getLogger(Controller.class);
     
     protected HttpServletRequest request;
     protected HttpServletResponse response;
@@ -83,6 +84,7 @@ public abstract class Controller
     }
 
     public void init() {
+        // override for initialization stuff
     }
 
     protected String getPath() {
@@ -93,7 +95,8 @@ public abstract class Controller
         try {
             FileUtil.thumb(image, getImagesPath(path), width, height, method);
         } catch (IOException ex) {
-
+            _log.error("Controller.thumb", ex);
+            throw new RuntimeException(ex);
         }
     }
 
@@ -112,8 +115,9 @@ public abstract class Controller
                     .append(PATH_PUBLIC_UPL).append(controller)
                     .append(PATH_IMAGES).append(path).toString(), filename);
         } catch (IOException ex) {
+            _log.error("Controller.saveImageFromUrl", ex);
+            throw new RuntimeException(ex);
         }
-        return null;
     }
 
     protected final String getImagesPath() {
@@ -193,7 +197,8 @@ public abstract class Controller
                 return new LocalFile(path, pathName, file);
             }
         } catch (Exception ex) {
-            
+            _log.error("Controller.handleFileUpload", ex);
+            throw new RuntimeException(ex);
         }
         return null;
     }
@@ -231,7 +236,7 @@ public abstract class Controller
             String path = new StringBuilder().append(PATH_PUBLIC_UPL)
                     .append(controller).append(PATH_IMAGES).append(pathName)
                     .toString();
-            List files = new ArrayList();
+            List tFiles = new ArrayList();
 
             Integer i = 0;
             for (InputStream stream : streamList) {
@@ -241,14 +246,15 @@ public abstract class Controller
                     name = UUID.randomUUID().toString();
                 String file = RequestUtil.saveImage(stream, context.getRealPath(path), name);
                 if (file != null) {
-                    files.add(new LocalFile(path, pathName, file));
+                    tFiles.add(new LocalFile(path, pathName, file));
                 }
             }
 
-            return files;
+            return tFiles;
         } catch (Exception ex) {
+            _log.error("Controller.handleMultipleFilesUpload", ex);
+            throw new RuntimeException(ex);
         }
-        return null;
     }
 
     private String getLocalDate() {
@@ -295,7 +301,7 @@ public abstract class Controller
                 return ((FileItem) files.get(name)).getInputStream();
             }
         } catch (Exception ex) {
-            _log.error("file not found", ex);
+            _log.error("Controller.getFile", ex);
             throw new RuntimeException(ex);
         }
         return null;
@@ -317,17 +323,18 @@ public abstract class Controller
 
                 return list;
             }
-        } catch (Exception e) {
-            _log.error("file not found", e);
+        } catch (Exception ex) {
+            _log.error("Controller.getFile", ex);
+            throw new RuntimeException(ex);
         }
         return null;
     }
 
     protected final String getParam(String key) {
-        if ((this.fields != null) && (this.fields.containsKey(key))) {
-            return (String) this.fields.get(key);
+        if ((fields != null) && (fields.containsKey(key))) {
+            return (String) fields.get(key);
         }
-        return this.request.getParameter(key);
+        return request.getParameter(key);
     }
     
     protected final String getParamString(String key) {
@@ -405,10 +412,6 @@ public abstract class Controller
                 request.getQueryString() : EMPTY;
         return new StringBuilder().append(getUrlPath()).append(queryString).toString();
     }
-    
-    protected final String createUrl(String controller, String action) {
-        return createUrl(controller, action, (Object) null);
-    }
 
     protected final String createUrl(String controller, String action, Object... params) {
         String route = new StringBuilder().append(controller.substring(0, 1)
@@ -441,7 +444,8 @@ public abstract class Controller
             BeanUtils.populate(bean, request.getParameterMap());
             BeanUtils.populate(bean, fields);
         } catch (IllegalAccessException | InvocationTargetException ex) {
-            _log.error("BeanUtils", ex);
+            _log.error("Controller.parseData", ex);
+            throw new RuntimeException(ex);
         }
     }
     
@@ -473,6 +477,14 @@ public abstract class Controller
         result.setTemplate(getTemplate());
         
         return result;
+    }
+    
+    protected Result redirect(String controller, String action, Object... params) {
+        return status(Result.SC_303_SEE_OTHER).link(createUrl(controller, action, params));
+    }
+    
+    protected Result redirect(String controller, String action) {
+        return status(Result.SC_303_SEE_OTHER).link(createUrl(controller, action));
     }
     
     protected Result redirect(String url) {
@@ -529,5 +541,13 @@ public abstract class Controller
     
     protected static String toJson(Object obj) {
         return new Gson().toJson(obj);
+    }
+    
+    protected static <T> T fromJson(String json, Type type) {
+        return new Gson().fromJson(json, type);
+    }
+    
+    protected static <T> T fromJson(String json, Class<T> theClass) {
+        return new Gson().fromJson(json, theClass);   
     }
 }

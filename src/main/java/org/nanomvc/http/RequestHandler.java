@@ -1,7 +1,5 @@
 package org.nanomvc.http;
 
-import java.io.PrintStream;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
@@ -13,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 public class RequestHandler {
     
-    private static Logger _log = LoggerFactory.getLogger(RequestHandler.class);
+    private static final Logger _log = LoggerFactory.getLogger(RequestHandler.class);
 
     private static final String SLASH = "/";
     private static final String RoutesMethod = "routes";

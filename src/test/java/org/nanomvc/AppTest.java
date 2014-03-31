@@ -1,4 +1,4 @@
-package com.nanomvc;
+package org.nanomvc;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -29,7 +29,7 @@ public class AppTest
     }
 
     /**
-     * Rigourous Test :-)
+     * Rigorous Test :-)
      */
     public void testApp()
     {
