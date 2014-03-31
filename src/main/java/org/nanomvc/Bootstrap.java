@@ -43,6 +43,12 @@ public class Bootstrap extends HttpServlet
     private static final String ActionPrefix = "";
     private static final String InitMethod = "init";
     private static final String ConfigMethod = "config";
+    private static final String HibernateFilePath = "/WEB-INF/conf/hibernate.cfg.xml";
+    private static final String ConfigurationFilePath = "/WEB-INF/configuration.properties";
+    
+    private static final String KEY_CONTROLLERS_PATH = "app.controllersPath";
+    private static final String KEY_DEFAULT_CONTROLLER = "app.defaultController";
+    private static final String KEY_ROUTER_CLASS = "app.routerClass";
     
     protected Map<String, Object> files;
     protected Map<String, String> fields;
@@ -60,23 +66,23 @@ public class Bootstrap extends HttpServlet
         
         try {
             File file = new File(getServletContext()
-                    .getRealPath("/WEB-INF/conf/hibernate.cfg.xml"));
+                    .getRealPath(HibernateFilePath));
             HibernateUtil.setConfigurationFile(file);
         } catch (Exception ex) {
-            _log.warn("/WEB-INF/conf/hibernate.cfg.xml is missing");
+            _log.warn(HibernateFilePath + " is missing");
         }
         
         Properties properties = new Properties();
         try {
             properties.load(new FileInputStream(new File(getServletContext()
-                    .getRealPath("/WEB-INF/configuration.properties"))));
+                    .getRealPath(ConfigurationFilePath))));
         } catch (IOException ex) {
             // ignore
         }
         if(!properties.isEmpty()) {
-            this.controllersPath = properties.getProperty("app.controllersPath");
-            this.defaultController = properties.getProperty("app.defaultController");
-            this.routerClass = properties.getProperty("app.routerClass");
+            controllersPath = properties.getProperty(KEY_CONTROLLERS_PATH);
+            defaultController = properties.getProperty(KEY_DEFAULT_CONTROLLER);
+            routerClass = properties.getProperty(KEY_ROUTER_CLASS);
         }
     }
 
@@ -191,7 +197,7 @@ public class Bootstrap extends HttpServlet
                     try {
                         switch (params[i].getSimpleName()) {
                             case "String":
-                                arguments[i] = ((String) args.get(i));
+                                arguments[i] = (String) args.get(i);
                                 break;
                             case "Integer":
                                 arguments[i] = Integer.valueOf((String) args.get(i));
@@ -225,7 +231,8 @@ public class Bootstrap extends HttpServlet
 //                                    org.apache.commons.beanutils.BeanUtils.populate(ob, request.getParameterMap());
 //                                    arguments[i] = ob;
 //                                } else
-                                    arguments[i] = args.get(i);
+                                arguments[i] = args.get(i);
+                                break;
                         }
                     } catch (Exception ex) {
                         arguments[i] = null;
@@ -348,7 +355,7 @@ public class Bootstrap extends HttpServlet
         sb.append("</head>\n");
         sb.append("<body style=\"padding-top: 10px;\">\n");
         sb.append("<div class=\"container\"><div class=\"alert alert-danger\">\n");
-        sb.append(error + "\n");
+        sb.append(error).append("\n");
         sb.append("</div></div>\n");
         sb.append("</body>\n");
         sb.append("</html>\n");
