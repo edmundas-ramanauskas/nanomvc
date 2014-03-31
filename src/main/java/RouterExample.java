@@ -7,7 +7,7 @@ public class RouterExample extends Router {
     public Map routes() {
         Map routes = new HashMap();
         
-        routes.put("/some/path",               "Pages.index");
+        routes.put("/",               "ExampleController.index");
         
         return routes;
     }
