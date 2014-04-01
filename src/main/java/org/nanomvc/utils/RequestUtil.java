@@ -24,8 +24,12 @@ import net.sf.jmimemagic.MagicMatchNotFoundException;
 import net.sf.jmimemagic.MagicParseException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public final class RequestUtil {
+public final class RequestUtil
+{
+    private static final Logger _log = LoggerFactory.getLogger(RequestUtil.class);
 
     public static String getMimeType(String url)
             throws IOException {
@@ -34,24 +38,27 @@ public final class RequestUtil {
             byte[] data = IOUtils.toByteArray(is);
             return Magic.getMagicMatch(data).getMimeType();
         } catch (MagicParseException | MagicMatchNotFoundException | MagicException ex) {
+            _log.error("RequestUtil.getMimeType", ex);
+            throw new RuntimeException(ex);
         }
-        return null;
     }
 
     public static String getMimeType(File file) throws IOException {
         try {
             return Magic.getMagicMatch(file, true).getMimeType();
         } catch (MagicParseException | MagicMatchNotFoundException | MagicException ex) {
+            _log.error("RequestUtil.getMimeType", ex);
+            throw new RuntimeException(ex);
         }
-        return null;
     }
 
     public static String getMimeType(byte[] data) throws IOException {
         try {
             return Magic.getMagicMatch(data).getMimeType();
         } catch (MagicParseException | MagicMatchNotFoundException | MagicException ex) {
+            _log.error("RequestUtil.getMimeType", ex);
+            throw new RuntimeException(ex);
         }
-        return null;
     }
 
     public static String getMimeType(ImageInputStream is) throws IOException {
@@ -135,9 +142,10 @@ public final class RequestUtil {
             conn.setDoOutput(true);
             conn.setInstanceFollowRedirects(true);
             return conn;
-        } catch (MalformedURLException e) {
+        } catch (MalformedURLException ex) {
+            _log.error("RequestUtil.getConnection", ex);
+            throw new RuntimeException(ex);
         }
-        return null;
     }
 
     public static String buildQuery(Map<String, Object> map) {
@@ -190,10 +198,9 @@ public final class RequestUtil {
             out.write(data);
             out.flush();
             out.close();
-	} catch (MalformedURLException e) {
-            e.printStackTrace();
-	} catch (IOException e) {
-            e.printStackTrace();
+	} catch (IOException ex) {
+            _log.error("RequestUtil.saveRemoteDataToFile", ex);
+            throw new RuntimeException(ex);
 	}
     }
 }
