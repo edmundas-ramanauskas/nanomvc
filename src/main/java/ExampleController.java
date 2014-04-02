@@ -8,7 +8,10 @@ import org.nanomvc.mvc.Result;
 public class ExampleController extends Controller {
     
     public Result index() {
-        return text("Hello World!");
+        String result = "Hello World!";
+        if(isAjax())
+            return json(result);
+        return text(result);
     }
     
 }
