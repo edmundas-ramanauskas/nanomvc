@@ -15,22 +15,19 @@ import java.util.Map;
  */
 public class Result
 {
-    public static int SC_200_OK = 200;
-    public static int SC_204_NO_CONTENT = 204;
-
-    public static int SC_300_MULTIPLE_CHOICES = 300;
-    public static int SC_301_MOVED_PERMANENTLY = 301;
-    public static int SC_302_FOUND = 302;
-    public static int SC_303_SEE_OTHER = 303;
-    public static int SC_304_NOT_MODIFIED = 304;
-    public static int SC_307_TEMPORARY_REDIRECT = 307;
-
-    public static int SC_400_BAD_REQUEST = 400;
-    public static int SC_403_FORBIDDEN = 403;
-    public static int SC_404_NOT_FOUND = 404;
-
-    public static int SC_500_INTERNAL_SERVER_ERROR = 500;
-    public static int SC_501_NOT_IMPLEMENTED = 501;
+    public static final int SC_200_OK = 200;
+    public static final int SC_204_NO_CONTENT = 204;
+    public static final int SC_300_MULTIPLE_CHOICES = 300;
+    public static final int SC_301_MOVED_PERMANENTLY = 301;
+    public static final int SC_302_FOUND = 302;
+    public static final int SC_303_SEE_OTHER = 303;
+    public static final int SC_304_NOT_MODIFIED = 304;
+    public static final int SC_307_TEMPORARY_REDIRECT = 307;
+    public static final int SC_400_BAD_REQUEST = 400;
+    public static final int SC_403_FORBIDDEN = 403;
+    public static final int SC_404_NOT_FOUND = 404;
+    public static final int SC_500_INTERNAL_SERVER_ERROR = 500;
+    public static final int SC_501_NOT_IMPLEMENTED = 501;
     
     public static final String CT_TEXT_HTML = "text/html";
     public static final String CT_TEXT_PLAIN = "text/plain";
@@ -45,6 +42,7 @@ public class Result
     
     public static final String DATE = "Date";
     public static final String EXPIRES = "Expires";
+    public static final String CHARSET = "utf-8";
     
     private boolean renderable = true;
     private boolean layoutEnabled = true;
@@ -59,7 +57,7 @@ public class Result
     public Result(int statusCode) {
 
         this.statusCode = statusCode;
-        this.charset = "utf-8";
+        this.charset = CHARSET;
 
     }
     
