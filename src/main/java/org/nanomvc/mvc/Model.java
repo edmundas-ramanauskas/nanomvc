@@ -20,9 +20,9 @@ public class Model {
     private Order order = Order.asc("id");
     public static final int ASC = 0;
     public static final int DESC = 1;
-    private Map<String, Object> criteriaEQ;
-    private Map<String, Object> criteriaNE;
+    private Map<String, Restriction> criteria;
     private Map<String, String> alias;
+    private Map<String, Between> between;
     private Integer limit;
     private Integer offset;
     private final Class modelClass;
@@ -81,55 +81,24 @@ public class Model {
         return this;
     }
 
-    public void addCriteria(String key, Object value) {
-        addCriteria(key, value, true);
-    }
-
-    public void addCriteria(String key, Object value, Boolean eq) {
-        if (eq) {
-            if (criteriaEQ == null) {
-                criteriaEQ = new HashMap();
-            }
-            criteriaEQ.put(key, value);
-        } else {
-            if (criteriaNE == null) {
-                criteriaNE = new HashMap();
-            }
-            criteriaNE.put(key, value);
+    public void addCriteria(String key, Object value, Comparator comp) {
+        if (criteria == null) {
+            criteria = new HashMap();
         }
+        criteria.put(key, new Restriction(value, comp));
     }
 
-    public void addCriteria(Map params) {
-        if (criteriaEQ == null) {
-            criteriaEQ = new HashMap();
-        }
-        criteriaEQ.putAll(params);
-    }
-
-    public Model criteria(String key, Object value) {
-        return criteria(key, value, true);
-    }
-
-    public Model criteria(String key, Object value, Boolean eq) {
-        if (eq) {
-            if (criteriaEQ == null) {
-                criteriaEQ = new HashMap();
-            }
-            criteriaEQ.put(key, value);
-        } else {
-            if (criteriaNE == null) {
-                criteriaNE = new HashMap();
-            }
-            criteriaNE.put(key, value);
-        }
+    public Model criteria(String key, Object value, Comparator comp) {
+        addCriteria(key, value, comp);
         return this;
     }
 
-    public Model criteria(Map params) {
-        if (criteriaEQ == null) {
-            criteriaEQ = new HashMap();
-        }
-        criteriaEQ.putAll(params);
+    public void addCriteria(String key, Object value) {
+        addCriteria(key, value, Comparator.EQ);
+    }
+
+    public Model criteria(String key, Object value) {
+        addCriteria(key, value, Comparator.EQ);
         return this;
     }
 
@@ -152,7 +121,6 @@ public class Model {
     public Object findOne(String name, Object value) {
         Object result = createCriteria().add(Restrictions.eq(name, value))
                 .uniqueResult();
-        
         session.close();
         return result;
     }
@@ -172,9 +140,9 @@ public class Model {
         return result;
     }
     
-    public List findBetween(String field, Object start, Object end) {
+    public List findBetween(String field, Object min, Object max) {
         List result = createCriteria()
-                    .add(Restrictions.between(field, start, end)).list();
+                    .add(Restrictions.between(field, min, max)).list();
         session.close();
         return result;
     }
@@ -186,9 +154,9 @@ public class Model {
         return result;
     }
     
-    public Long countBetween(String field, Object start, Object end) {
+    public Long countBetween(String field, Object min, Object max) {
         Long count = (Long) createCriteria()
-                    .add(Restrictions.between(field, start, end))
+                    .add(Restrictions.between(field, min, max))
                     .setProjection(Projections.rowCount()).uniqueResult();
         session.close();
         return count;
@@ -200,15 +168,6 @@ public class Model {
                     .setProjection(Projections.rowCount()).uniqueResult();
         session.close();
         return count;
-    }
-
-    public List find(Map<String, String> params) {
-        return findByCriteria(params);
-    }
-
-    public List findByCriteria(Map<String, String> params) {
-        criteriaEQ.putAll(params);
-        return findAll();
     }
 
     public void remove(Object object) {
@@ -275,14 +234,32 @@ public class Model {
         if (order != null) {
             criteria.addOrder(order);
         }
-        if (criteriaEQ != null) {
-            for (String key : criteriaEQ.keySet()) {
-                criteria.add(Restrictions.eq(key, criteriaEQ.get(key)));
-            }
-        }
-        if (criteriaNE != null) {
-            for (String key : criteriaNE.keySet()) {
-                criteria.add(Restrictions.ne(key, criteriaNE.get(key)));
+        if (this.criteria != null) {
+            for (String key : this.criteria.keySet()) {
+                Restriction restriction = this.criteria.get(key);
+                switch(restriction.getType()) {
+                    case EQ:
+                        criteria.add(Restrictions.eq(key, restriction.getValue()));
+                        break;
+                    case NE:
+                        criteria.add(Restrictions.ne(key, restriction.getValue()));
+                        break;
+                    case GT:
+                        criteria.add(Restrictions.gt(key, restriction.getValue()));
+                        break;
+                    case GE:
+                        criteria.add(Restrictions.ge(key, restriction.getValue()));
+                        break;
+                    case LT:
+                        criteria.add(Restrictions.lt(key, restriction.getValue()));
+                        break;
+                    case LE:
+                        criteria.add(Restrictions.le(key, restriction.getValue()));
+                        break;
+                    case IN:
+                        criteria.add(Restrictions.in(key, (List)restriction.getValue()));
+                        break;
+                }
             }
         }
         if(alias != null) {
@@ -295,10 +272,49 @@ public class Model {
     }
 
     private void clear() {
-        criteriaEQ = null;
-        criteriaNE = null;
+        criteria = null;
         limit = null;
         offset = null;
         order = null;
+    }
+    
+    class Restriction {
+        Object value;
+        Comparator type;
+        
+        public Restriction(Object value, Comparator type) {
+            this.value = value;
+            this.type = type;
+        }
+        
+        public Object getValue() {
+            return value;
+        }
+        
+        public Comparator getType() {
+            return type;
+        }
+    }
+    
+    public enum Comparator {
+        EQ, NE, GT, GE, LT, LE, IN;
+    }
+    
+    class Between {
+        Object min;
+        Object max;
+        
+        public Between(Object min, Object max) {
+            this.min = min;
+            this.max = max;
+        }
+        
+        public Object getMin() {
+            return min;
+        }
+        
+        public Object getMax() {
+            return max;
+        }
     }
 }

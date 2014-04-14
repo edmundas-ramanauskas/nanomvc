@@ -267,20 +267,39 @@ public abstract class Controller
         return Jsoup.parse(input).text();
     }
     
+    /**
+     * Set current template
+     * @param template 
+     */
     protected void setTemplate(String template) {
         this.template = template;
     }
     
+    /**
+     * Assign value to template and layout template
+     * @param key
+     * @param value 
+     */
     protected final void assignToAll(String key, Object value) {
         assign(key, value);
         assignToMain(key, value);
     }
     
+    /**
+     * Assign value to layout template
+     * @param key
+     * @param value 
+     */
     protected final void assignToMain(String key, Object value) {
         key = (key.startsWith("main")) ? key : "main." + key;
         assign(key, value);
     }
 
+    /**
+     * Assign value to template
+     * @param key
+     * @param value 
+     */
     protected final void assign(String key, Object value) {
         if (key.startsWith("main.")) {
             if (global == null) {
@@ -369,10 +388,18 @@ public abstract class Controller
         request.getSession().setAttribute(key, value);
     }
 
+    protected final <T> T storeGet(String key, T value) {
+        T obj = (T) storeGet(key);
+        return (obj == null) ? value : obj;
+    }
+
     protected final Object storeGet(String key) {
         return request.getSession().getAttribute(key);
     }
 
+    /**
+     * Clear user session storage
+     */
     protected final void storeClear() {
         request.getSession().invalidate();
     }
@@ -381,6 +408,10 @@ public abstract class Controller
         return request.getServletPath();
     }
 
+    /**
+     * Get application base URL
+     * @return 
+     */
     protected final String getBaseUrl() {
         if ((request.getServerPort() == 80) || (request.getServerPort() == 443)) {
             return new StringBuilder().append(request.getScheme())
@@ -394,6 +425,10 @@ public abstract class Controller
                 .append(request.getContextPath()).toString();
     }
 
+    /**
+     * Get current URL without query string
+     * @return 
+     */
     protected final String getCurrentUrl() {
         String requestUri = request.getRequestURI() != null ? 
                 request.getRequestURI() : EMPTY;
@@ -407,12 +442,23 @@ public abstract class Controller
                 .append(request.getServerPort()).append(requestUri).toString();
     }
 
+    /**
+     * Get current URL with query string
+     * @return 
+     */
     protected final String getCurrentUrlFull() {
         String queryString = request.getQueryString() != null ? 
                 request.getQueryString() : EMPTY;
         return new StringBuilder().append(getUrlPath()).append(queryString).toString();
     }
 
+    /**
+     * Create URL
+     * @param controller
+     * @param action
+     * @param params
+     * @return 
+     */
     protected final String createUrl(String controller, String action, Object... params) {
         String route = new StringBuilder().append(controller.substring(0, 1)
                 .toUpperCase()).append(controller.substring(1).toLowerCase())
@@ -423,12 +469,18 @@ public abstract class Controller
         if (router.reverseRoutes().containsKey(route)) {
             url = (String) router.reverseRoutes().get(route);
         }
-        return new StringBuilder().append(getBaseUrl()).append(url)
+        String result = new StringBuilder().append(getBaseUrl()).append(url)
                 .append(params != null ? new StringBuilder().append(SLASH)
                         .append(StringUtils.join(params, SLASH))
                         .toString() : EMPTY).toString();
+        
+        return result.endsWith("//") ? result.substring(0, result.length()-1) : result;
     }
 
+    /**
+     * Check if request is AJAX
+     * @return 
+     */
     protected final Boolean isAjax() {
         String xReq = request.getHeader("X-Requested-With");
         return Boolean.valueOf((xReq != null)
@@ -479,68 +531,142 @@ public abstract class Controller
         return result;
     }
     
+    /**
+     * Generate redirect response
+     * @param controller
+     * @param action
+     * @param params
+     * @return 
+     */
     protected Result redirect(String controller, String action, Object... params) {
         return status(Result.SC_303_SEE_OTHER).link(createUrl(controller, action, params));
     }
     
+    /**
+     * Generate redirect response
+     * @param controller
+     * @param action
+     * @return 
+     */
     protected Result redirect(String controller, String action) {
         return status(Result.SC_303_SEE_OTHER).link(createUrl(controller, action));
     }
     
+    /**
+     * Generate redirect response
+     * @param url
+     * @return 
+     */
     protected Result redirect(String url) {
         return status(Result.SC_303_SEE_OTHER).link(url);
     }
     
+    /**
+     * Generate "ok" response
+     * @return 
+     */
     protected Result ok() {
         return status(Result.SC_200_OK);
     }
 
+    /**
+     * Generate "not found" response
+     * @return 
+     */
     protected Result notFound() {
         return status(Result.SC_404_NOT_FOUND);
     }
 
+    /**
+     * Generate "forbidden" response
+     * @return 
+     */
     protected Result forbidden() {
         return status(Result.SC_403_FORBIDDEN);
     }
 
+    /**
+     * Generate "bad request" response
+     * @return 
+     */
     protected Result badRequest() {
         return status(Result.SC_400_BAD_REQUEST);
     }
 
+    /**
+     * Generate "internal server error" response
+     * @return 
+     */
     protected Result internalServerError() {
         return status(Result.SC_500_INTERNAL_SERVER_ERROR);
     }
     
+    /**
+     * Generate plain text response
+     * @return 
+     */
     protected Result text() {
         return status(Result.SC_200_OK).renderable(false).text();
     }
     
+    /**
+     * Generate plain text response
+     * @param content
+     * @return 
+     */
     protected Result text(Object content) {
         return text().content(content.toString());
     }
     
+    /**
+     * Generate HTML response
+     * @return 
+     */
     protected Result html() {
         return status(Result.SC_200_OK).html();
     }
     
+    /**
+     * Generate HTML response
+     * @param template
+     * @return 
+     */
     protected Result html(String template) {
         return html().template(template(template)); // triple template :)
     }
 
+    /**
+     * Generate JSON response
+     * @return 
+     */
     protected Result json() {
         return status(Result.SC_200_OK).renderable(false).json();
     }
 
+    /**
+     * Generate JSON response
+     * @param content
+     * @return 
+     */
     protected Result json(Object content) {
         return json().content(toJson(content));
     }
 
+    /**
+     * Generate XML response
+     * @return 
+     */
     protected Result xml() {       
         return status(Result.SC_200_OK).xml();
     }
     
-    protected static String toJson(Object obj) {
-        return new Gson().toJson(obj);
+    /**
+     * Convert object to JSON
+     * @param object
+     * @return 
+     */
+    protected static String toJson(Object object) {
+        return new Gson().toJson(object);
     }
     
     protected static <T> T fromJson(String json, Type type) {

@@ -110,6 +110,7 @@ public class Result
     
     public Result content(Object content) {
         this.content = content;
+        this.renderable = false;
         return this;
     }
     

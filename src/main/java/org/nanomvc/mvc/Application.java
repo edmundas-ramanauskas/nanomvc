@@ -58,10 +58,11 @@ public class Application {
         if (this.router.reverseRoutes().containsKey(route)) {
             url = (String) this.router.reverseRoutes().get(route);
         }
-        return new StringBuilder().append(this.baseUrl).append(url)
+        String result = new StringBuilder().append(this.baseUrl).append(url)
                 .append(params != null ? new StringBuilder().append(Controller.SLASH)
                         .append(StringUtils.join(params, Controller.SLASH))
                         .toString() : Controller.EMPTY).toString();
+        return result.endsWith("//") ? result.substring(0, result.length()-1) : result;
     }
 
     public String getUrl() {
